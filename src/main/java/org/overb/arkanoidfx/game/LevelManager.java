@@ -112,7 +112,7 @@ public final class LevelManager {
 
     private void loadAndStart(String levelFileName) {
         FXGL.getGameScene().clearUINodes();
-        FXGL.getGameScene().setBackgroundColor(Color.web("#0f1116"));
+        FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
         session.resetLevel();
 
         LevelEntity level;
