@@ -1,4 +1,4 @@
-package org.overb.arkanoidfx.loaders;
+package org.overb.arkanoidfx.game.loaders;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.fasterxml.jackson.databind.JsonNode;

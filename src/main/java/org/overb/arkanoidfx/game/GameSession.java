@@ -46,12 +46,12 @@ public final class GameSession {
 
     public void resetForNewGame() {
         score = 0;
+        lives = 3;
         resetLevel();
     }
 
     public void resetLevel() {
         resetCombo();
-        lives = 3;
         destructibleBricksLeft = 0;
     }
 

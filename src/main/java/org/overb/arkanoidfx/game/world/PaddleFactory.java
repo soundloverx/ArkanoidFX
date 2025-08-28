@@ -1,4 +1,4 @@
-package org.overb.arkanoidfx.world;
+package org.overb.arkanoidfx.game.world;
 
 import com.almasb.fxgl.dsl.EntityBuilder;
 import com.almasb.fxgl.entity.Entity;

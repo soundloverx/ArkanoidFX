@@ -8,11 +8,11 @@ import org.overb.arkanoidfx.audio.MusicService;
 import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.LevelEntity;
 import org.overb.arkanoidfx.enums.EntityType;
-import org.overb.arkanoidfx.loaders.LevelLoader;
-import org.overb.arkanoidfx.ui.HUDManager;
-import org.overb.arkanoidfx.world.BallFactory;
-import org.overb.arkanoidfx.world.PaddleFactory;
-import org.overb.arkanoidfx.world.WallsFactory;
+import org.overb.arkanoidfx.game.loaders.LevelLoader;
+import org.overb.arkanoidfx.game.ui.HUDManager;
+import org.overb.arkanoidfx.game.world.BallFactory;
+import org.overb.arkanoidfx.game.world.PaddleFactory;
+import org.overb.arkanoidfx.game.world.WallsFactory;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ public final class LevelManager {
     private final WallsFactory wallsFactory;
     private final PaddleFactory paddleFactory;
     private final BallFactory ballFactory;
-    private final org.overb.arkanoidfx.loaders.LevelLoader levelLoader; // new dependency
+    private final org.overb.arkanoidfx.game.loaders.LevelLoader levelLoader; // new dependency
 
     private List<String> levelOrder;
     private int currentLevelIndex = 0;

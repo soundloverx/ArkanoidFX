@@ -1,4 +1,4 @@
-package org.overb.arkanoidfx.ui;
+package org.overb.arkanoidfx.game.ui;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.time.TimerAction;

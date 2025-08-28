@@ -6,11 +6,12 @@ import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.texture.Texture;
 import com.almasb.fxgl.time.TimerAction;
+import javafx.geometry.Point2D;
 import javafx.util.Duration;
-import org.overb.arkanoidfx.world.SurpriseFactory;
+import org.overb.arkanoidfx.game.world.SurpriseFactory;
 import org.overb.arkanoidfx.audio.SfxBus;
-import org.overb.arkanoidfx.core.EventBus;
-import org.overb.arkanoidfx.core.GameEvent;
+import org.overb.arkanoidfx.game.core.EventBus;
+import org.overb.arkanoidfx.game.core.GameEvent;
 import org.overb.arkanoidfx.entities.BrickEntity;
 import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.SurpriseEntity;
@@ -58,6 +59,20 @@ public class BrickComponent extends Component {
             ballEntity.getComponentOptional(BallComponent.class)
                     .ifPresent(bc -> bc.boostSpeedByFactor(1.0 + brickEntity.speedEffect));
         }
+        ballEntity.getComponentOptional(BallComponent.class).ifPresent(bc -> {
+            if (ThreadLocalRandom.current().nextDouble() < 0.20) {
+                double sign = ThreadLocalRandom.current().nextBoolean() ? 1.0 : -1.0;
+                double angRad = Math.toRadians(0.5) * sign;
+                var v = bc.getVelocity();
+                if (v != null && v.magnitude() > 1e-6) {
+                    double cos = Math.cos(angRad);
+                    double sin = Math.sin(angRad);
+                    double nx = v.getX() * cos - v.getY() * sin;
+                    double ny = v.getX() * sin + v.getY() * cos;
+                    bc.setVelocity(new Point2D(nx, ny));
+                }
+            }
+        });
         if (brickEntity.damageAdvancesFrame && brickEntity.visual.frames > 1) {
             advanceFrame();
         }

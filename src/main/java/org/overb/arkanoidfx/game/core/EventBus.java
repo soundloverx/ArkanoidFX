@@ -1,4 +1,4 @@
-package org.overb.arkanoidfx.core;
+package org.overb.arkanoidfx.game.core;
 
 import org.overb.arkanoidfx.enums.EventType;
 

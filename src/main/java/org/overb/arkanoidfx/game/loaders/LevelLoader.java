@@ -1,4 +1,4 @@
-package org.overb.arkanoidfx.loaders;
+package org.overb.arkanoidfx.game.loaders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.overb.arkanoidfx.entities.LevelEntity;

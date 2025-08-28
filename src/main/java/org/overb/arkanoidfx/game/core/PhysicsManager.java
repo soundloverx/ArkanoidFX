@@ -1,15 +1,13 @@
-package org.overb.arkanoidfx.physics;
+package org.overb.arkanoidfx.game.core;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.physics.CollisionHandler;
 import org.overb.arkanoidfx.components.BallComponent;
-import org.overb.arkanoidfx.core.EventBus;
-import org.overb.arkanoidfx.core.GameEvent;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.enums.EventType;
 import org.overb.arkanoidfx.game.GameSession;
-import org.overb.arkanoidfx.ui.HUDManager;
+import org.overb.arkanoidfx.game.ui.HUDManager;
 
 import java.util.List;
 import java.util.function.Consumer;

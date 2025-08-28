@@ -6,11 +6,10 @@ import com.almasb.fxgl.entity.component.Component;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import lombok.Getter;
+import lombok.Setter;
 import org.overb.arkanoidfx.audio.SfxBus;
 import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.enums.EntityType;
-
-import java.util.stream.Collectors;
 
 public class BallComponent extends Component {
 
@@ -28,6 +27,9 @@ public class BallComponent extends Component {
     private final Entity paddle;
     @Getter
     private boolean launched = false;
+
+    @Getter
+    @Setter
     private Point2D velocity = Point2D.ZERO;
     private double speedMultiplier = 1.0;
     private String sndHitWall;
@@ -180,7 +182,7 @@ public class BallComponent extends Component {
         Rectangle2D ballAABB = getAABB(entity);
         var bricks = FXGL.getGameWorld()
                 .getEntitiesByType(EntityType.BRICK)
-                .stream().filter(Entity::isActive).collect(Collectors.toList());
+                .stream().filter(Entity::isActive).toList();
         boolean bounced = false;
         for (Entity brick : bricks) {
             Rectangle2D brickAABB = getAABB(brick);
@@ -189,10 +191,7 @@ public class BallComponent extends Component {
             }
             snapBackToContactAgainst(brickAABB, direction, Math.max(stepDistance, NUDGE));
             Axis axis = chooseBounceAxis(getAABB(entity), brickAABB);
-            var comp = brick.getComponentOptional(BrickComponent.class).orElse(null);
-            if (comp != null) {
-                comp.onBallHit(entity);
-            }
+            brick.getComponentOptional(BrickComponent.class).ifPresent(comp -> comp.onBallHit(entity));
             if (axis == Axis.HORIZONTAL) {
                 bounceHorizontal();
             } else {
@@ -303,10 +302,6 @@ public class BallComponent extends Component {
         double newSpeed = Math.min(unclamped, maxSpeed);
         speedMultiplier = clamp(newSpeed / BASE_SPEED);
         setSpeedDir(new Point2D(dx, dy), newSpeed);
-    }
-
-    public Point2D getVelocityVector() {
-        return velocity;
     }
 
     public void setLaunchedWithVelocity(Point2D initialVelocity) {

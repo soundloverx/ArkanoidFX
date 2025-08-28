@@ -1,10 +1,12 @@
-package org.overb.arkanoidfx.world;
+package org.overb.arkanoidfx.game;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import javafx.geometry.Point2D;
 import org.overb.arkanoidfx.components.BallComponent;
 import org.overb.arkanoidfx.enums.EntityType;
+import org.overb.arkanoidfx.game.world.BallFactory;
+import org.overb.arkanoidfx.game.world.WallsFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +42,7 @@ public final class SurpriseService {
             if (bc == null) {
                 continue;
             }
-            Point2D v = bc.getVelocityVector();
+            Point2D v = bc.getVelocity();
             double speed = v.magnitude();
             if (speed < 1e-3) {
                 continue;
