@@ -1,0 +1,17 @@
+{
+  "paddles": [
+    {
+      "id": 1,
+      "name": "default",
+      "sizeW": 100,
+      "sizeH": 20,
+      "visual": {
+        "sprite": "paddle_default.png",
+        "frames": 13,
+        "frameW": 100,
+        "frameH": 20,
+        "frameDuration": 0.08
+      }
+    }
+  ]
+}

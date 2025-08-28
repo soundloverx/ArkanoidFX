@@ -1,0 +1,37 @@
+{
+  "surprises": [
+    {
+      "id": 1,
+      "name": "multiball",
+      "visual": {
+        "sprite": "surprise_ball.png",
+        "frames": 20,
+        "frameW": 35,
+        "frameH": 30,
+        "frameDuration": 0.08
+      },
+      "fallSpeed": 160,
+      "effect": "MULTIBALL",
+      "params": {
+        "count": 3
+      },
+      "spawnChance": 0.12
+    },
+    {
+      "id": 2,
+      "name": "safety_wall",
+      "visual": {
+        "sprite": "surprise_lightning.png",
+        "frames": 20,
+        "frameW": 35,
+        "frameH": 30,
+        "frameDuration": 0.08
+      },
+      "fallSpeed": 140,
+      "effect": "SAFETY_WALL",
+      "params": {
+        "durationSec": 10
+      }
+    }
+  ]
+}

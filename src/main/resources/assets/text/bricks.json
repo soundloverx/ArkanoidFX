@@ -1,0 +1,105 @@
+{
+  "bricks": [
+    {
+      "id": 1,
+      "name": "regular",
+      "visual": {
+        "sprite": "brick_regular.png",
+        "frames": 1,
+        "frameW": 50,
+        "frameH": 20,
+        "frameDuration": 0.08
+      },
+      "animated": false,
+      "damageAdvancesFrame": false,
+      "breakAnim": null,
+      "hp": 1,
+      "points": 1,
+      "speedEffect": 0.0,
+      "hitSound": "regular_brick_hit.wav",
+      "destroySound": null
+    },
+    {
+      "id": 2,
+      "name": "immortal_regular",
+      "visual": {
+        "sprite": "brick_immortal.png",
+        "frames": 1,
+        "frameW": 50,
+        "frameH": 20,
+        "frameDuration": 0.08
+      },
+      "animated": false,
+      "damageAdvancesFrame": false,
+      "breakAnim": null,
+      "hp": -1,
+      "points": 0,
+      "speedEffect": 0.0,
+      "hitSound": "metal_brick_hit.wav",
+      "destroySound": null
+    },
+    {
+      "id": 3,
+      "name": "rubber",
+      "visual": {
+        "sprite": "brick_rubber.png",
+        "frames": 1,
+        "frameW": 50,
+        "frameH": 20,
+        "frameDuration": 0.06
+      },
+      "animated": false,
+      "damageAdvancesFrame": true,
+      "breakAnim": null,
+      "hp": -1,
+      "points": 0,
+      "speedEffect": 0.05,
+      "hitSound": "rubber_brick_hit.wav",
+      "destroySound": null
+    },
+    {
+      "id": 4,
+      "name": "multi_hit_regular",
+      "visual": {
+        "sprite": "brick_glass_break.png",
+        "frames": 3,
+        "frameW": 50,
+        "frameH": 20,
+        "frameDuration": 0
+      },
+      "animated": false,
+      "damageAdvancesFrame": true,
+      "breakAnim": null,
+      "hp": 3,
+      "points": 5,
+      "speedEffect": 0.0,
+      "hitSound": "glass_brick_hit.wav",
+      "destroySound": "glass_brick_hit.wav"
+    },
+    {
+      "id": 5,
+      "name": "glass",
+      "visual": {
+        "sprite": "brick_glass.png",
+        "frames": 1,
+        "frameW": 50,
+        "frameH": 20,
+        "frameDuration": 0.08
+      },
+      "animated": false,
+      "damageAdvancesFrame": false,
+      "breakAnim": {
+        "sprite": "brick_glass_break.png",
+        "frames": 17,
+        "frameW": 50,
+        "frameH": 20,
+        "frameDuration": 0.05
+      },
+      "hp": 1,
+      "points": 1,
+      "speedEffect": 0.0,
+      "hitSound": "glass_brick_hit.wav",
+      "destroySound": null
+    }
+  ]
+}
