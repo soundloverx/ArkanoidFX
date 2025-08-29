@@ -14,6 +14,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import org.overb.arkanoidfx.ConfigOptions;
+import org.overb.arkanoidfx.audio.AudioMixer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,23 +24,19 @@ import java.util.function.Consumer;
 public class OptionsMenuUI extends StackPane {
 
     private final GridPane grid = new GridPane();
-
     private final ComboBox<String> resolutionBox = new ComboBox<>();
     private final ToggleGroup windowModeGroup = new ToggleGroup();
     private final RadioButton rbWindowed = new RadioButton("Windowed");
     private final RadioButton rbFullscreen = new RadioButton("Fullscreen");
-
     private final Slider masterSlider = mkSlider();
     private final Slider musicSlider = mkSlider();
     private final Slider sfxSlider = mkSlider();
-
     private ConfigOptions original;
 
     public OptionsMenuUI(ConfigOptions cfg,
                          BiConsumer<ConfigOptions, ConfigOptions> onApply,
                          Consumer<Void> onCancel) {
         setStyle("-fx-background-color: black;");
-        // Fill the entire visible window: bind to THIS node's scene size when available
         sceneProperty().addListener((obs, oldScene, scene) -> {
             if (scene != null) {
                 minWidthProperty().bind(scene.widthProperty());
@@ -121,9 +118,7 @@ public class OptionsMenuUI extends StackPane {
             original = copyOf(updated);
         });
         btnCancel.setOnAction(e -> {
-            // revert live preview to original
             applyVolumes(original);
-            // restore selection to original
             resolutionBox.getSelectionModel().select(original.width + "x" + original.height);
             rbWindowed.setSelected(!"FULLSCREEN".equalsIgnoreCase(original.fullscreenMode));
             rbFullscreen.setSelected("FULLSCREEN".equalsIgnoreCase(original.fullscreenMode));
@@ -134,7 +129,6 @@ public class OptionsMenuUI extends StackPane {
         getChildren().add(grid);
         StackPane.setAlignment(grid, Pos.CENTER);
 
-        // Live volume preview while sliding
         masterSlider.valueProperty().addListener((o, ov, nv) -> applyVolumes(computePreview()));
         musicSlider.valueProperty().addListener((o, ov, nv) -> applyVolumes(computePreview()));
         sfxSlider.valueProperty().addListener((o, ov, nv) -> applyVolumes(computePreview()));
@@ -143,7 +137,6 @@ public class OptionsMenuUI extends StackPane {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        // Explicitly center grid using this pane's current size and grid preferred size
         double w = getWidth();
         double h = getHeight();
         grid.applyCss();
@@ -226,8 +219,8 @@ public class OptionsMenuUI extends StackPane {
     }
 
     public void applyVolumes(ConfigOptions cfg) {
-        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMasterVolume(cfg.audio.master);
-        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMusicVolume(cfg.audio.music);
-        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setSfxVolume(cfg.audio.sfx);
+        AudioMixer.getInstance().setMasterVolume(cfg.audio.master);
+        AudioMixer.getInstance().setMusicVolume(cfg.audio.music);
+        AudioMixer.getInstance().setSfxVolume(cfg.audio.sfx);
     }
 }

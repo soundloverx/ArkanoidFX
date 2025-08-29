@@ -23,7 +23,6 @@ public class MainMenuUI extends StackPane {
 
     public MainMenuUI(Consumer<Item> onAction) {
         setStyle("-fx-background-color: black;");
-        // Fill the entire visible window: bind to THIS node's scene size when available
         sceneProperty().addListener((obs, oldScene, scene) -> {
             if (scene != null) {
                 minWidthProperty().bind(scene.widthProperty());
@@ -34,7 +33,6 @@ public class MainMenuUI extends StackPane {
                 maxHeightProperty().bind(scene.heightProperty());
             }
         });
-        // If scene already set, apply now
         if (getScene() != null) {
             minWidthProperty().bind(getScene().widthProperty());
             minHeightProperty().bind(getScene().heightProperty());
@@ -64,7 +62,6 @@ public class MainMenuUI extends StackPane {
 
         widthProperty().addListener((o, ov, nv) -> requestLayout());
         heightProperty().addListener((o, ov, nv) -> requestLayout());
-        // focus first item for keyboard navigation
         if (!menuBox.getChildren().isEmpty()) {
             menuBox.getChildren().getFirst().requestFocus();
         }
@@ -73,7 +70,6 @@ public class MainMenuUI extends StackPane {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        // Explicitly center menuBox using this pane's current size and menuBox preferred size
         double w = getWidth();
         double h = getHeight();
         menuBox.applyCss();
@@ -92,32 +88,9 @@ public class MainMenuUI extends StackPane {
         text.setFill(Color.WHITE);
         text.setFont(Font.font("Cambria", 48));
         applyHoverEffects(text);
-
         text.setOnMouseClicked(e -> action.run());
-
         menuBox.getChildren().add(text);
-
-        // Keyboard navigation support
         text.setFocusTraversable(true);
-        text.setOnKeyPressed(e -> {
-            switch (e.getCode()) {
-                case ENTER -> action.run();
-                case UP, W -> focusPrev(text);
-                case DOWN, S -> focusNext(text);
-            }
-        });
-    }
-
-    private void focusPrev(Node node) {
-        int idx = menuBox.getChildren().indexOf(node);
-        int prev = (idx - 1 + menuBox.getChildren().size()) % menuBox.getChildren().size();
-        menuBox.getChildren().get(prev).requestFocus();
-    }
-
-    private void focusNext(Node node) {
-        int idx = menuBox.getChildren().indexOf(node);
-        int next = (idx + 1) % menuBox.getChildren().size();
-        menuBox.getChildren().get(next).requestFocus();
     }
 
     private void applyHoverEffects(Text text) {

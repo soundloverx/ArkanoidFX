@@ -57,7 +57,7 @@ public final class HUDManager {
         }
         hudScore.setText("Score: " + session.getScoreRounded());
         hudCombo.setText("Combo: " + session.getCombo());
-        hudMultiplier.setText(String.format("Modifier: %.2f%%", session.getLastMultiplier() * 100.0));
+        hudMultiplier.setText(String.format("Multiplier: %.2fx", session.getLastMultiplier()));
         hudLevel.setText("Level: " + session.getCurrentLevel());
         hudLives.setText("Lives: " + session.getLives());
         layoutBottomRightHorizontal();

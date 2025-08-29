@@ -22,7 +22,6 @@ public class PauseMenuUI extends StackPane {
 
     public PauseMenuUI(Consumer<Item> onAction) {
         setStyle("-fx-background-color: black;");
-        // Fill the entire visible window: bind to THIS node's scene size when available
         sceneProperty().addListener((obs, oldScene, scene) -> {
             if (scene != null) {
                 minWidthProperty().bind(scene.widthProperty());
@@ -35,10 +34,8 @@ public class PauseMenuUI extends StackPane {
         });
         setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
         setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-
         menuBox.setAlignment(Pos.CENTER);
         getChildren().add(menuBox);
-
         Text title = new Text("Paused");
         title.setFill(Color.WHITE);
         title.setFont(Font.font("Verdana", FontWeight.BOLD , 50));
@@ -50,10 +47,8 @@ public class PauseMenuUI extends StackPane {
         addItem("Resume", () -> onAction.accept(Item.RESUME));
         addItem("Quit to main menu", () -> onAction.accept(Item.QUIT_TO_MAIN));
         addItem("Exit", () -> onAction.accept(Item.EXIT));
-
         widthProperty().addListener((o, ov, nv) -> requestLayout());
         heightProperty().addListener((o, ov, nv) -> requestLayout());
-
         if (!menuBox.getChildren().isEmpty()) {
             menuBox.getChildren().get(1).requestFocus();
         }
@@ -83,26 +78,6 @@ public class PauseMenuUI extends StackPane {
         text.setOnMouseClicked(e -> action.run());
         menuBox.getChildren().add(text);
         text.setFocusTraversable(true);
-        text.setOnKeyPressed(e -> {
-            switch (e.getCode()) {
-                case ENTER -> action.run();
-                case ESCAPE -> action.run(); // ESC on focused item acts as activate (Resume is first actionable)
-                case UP, W -> focusPrev(text);
-                case DOWN, S -> focusNext(text);
-            }
-        });
-    }
-
-    private void focusPrev(Node node) {
-        int idx = menuBox.getChildren().indexOf(node);
-        int prev = (idx - 1 + menuBox.getChildren().size()) % menuBox.getChildren().size();
-        menuBox.getChildren().get(prev).requestFocus();
-    }
-
-    private void focusNext(Node node) {
-        int idx = menuBox.getChildren().indexOf(node);
-        int next = (idx + 1) % menuBox.getChildren().size();
-        menuBox.getChildren().get(next).requestFocus();
     }
 
     private void applyHoverEffects(Text text) {
