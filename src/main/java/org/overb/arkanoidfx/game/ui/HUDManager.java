@@ -68,8 +68,8 @@ public final class HUDManager {
     }
 
     private void layoutBottomRightHorizontal() {
-        double right = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getWidth() - 16, Axis.HORIZONTAL);
-        double bottom = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getHeight() - 8, Axis.VERTICAL);
+        double right = ResolutionManager.DESIGN_RESOLUTION.getWidth() - 16;
+        double bottom = ResolutionManager.DESIGN_RESOLUTION.getHeight() - 8;
 
         hudLives.applyCss();
         hudScore.applyCss();

@@ -7,7 +7,6 @@ import com.almasb.fxgl.entity.Entity;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.java.Log;
-import org.overb.arkanoidfx.audio.MusicService;
 import org.overb.arkanoidfx.audio.SfxBus;
 import org.overb.arkanoidfx.components.BallComponent;
 import org.overb.arkanoidfx.components.DebugHitboxViewComponent;
@@ -41,7 +40,6 @@ public class ArkanoidApp extends GameApplication {
     private final GameSession session = new GameSession();
     private boolean hitboxDebugShown = false;
     private HUDManager hudManager;
-    private MusicService musicService;
     private BallFactory ballFactory;
     private WallsFactory wallsFactory;
     private PaddleFactory paddleFactory;
@@ -51,19 +49,16 @@ public class ArkanoidApp extends GameApplication {
 
     @Override
     protected void initSettings(GameSettings settings) {
-        Resolution res = Resolution.R1920x1080;
+        Resolution defaultResolution = Resolution.R1920x1080;
         settings.setTitle("Arkanoid FX");
-        settings.setVersion("0.2");
-        settings.setWidth(res.getWidth());
-        settings.setHeight(res.getHeight());
-        ResolutionManager.getInstance().setCurrentResolution(res);
-        BallComponent.refreshBaseSpeedAtCurrentResolution();
+        settings.setVersion("0.3");
+        settings.setWidth(defaultResolution.getWidth());
+        settings.setHeight(defaultResolution.getHeight());
         settings.setFullScreenAllowed(true);
         settings.setFullScreenFromStart(false);
         settings.setProfilingEnabled(false);
         settings.setMainMenuEnabled(false);
         settings.setGameMenuEnabled(false);
-//        settings.setStageStyle(StageStyle.UNDECORATED);
     }
 
     @Override
@@ -85,11 +80,10 @@ public class ArkanoidApp extends GameApplication {
             }
             log.info("Level order: " + levelOrder);
             hudManager = new HUDManager();
-            musicService = new MusicService();
             ballFactory = new BallFactory(entityRepository);
             wallsFactory = new WallsFactory();
             paddleFactory = new PaddleFactory(entityRepository);
-            levelManager = new LevelManager(entityRepository, session, hudManager, musicService, wallsFactory, paddleFactory, ballFactory, levelLoader);
+            levelManager = new LevelManager(entityRepository, session, hudManager, wallsFactory, paddleFactory, ballFactory, levelLoader);
             levelManager.setLevelOrder(levelOrder);
             surpriseService = new SurpriseService(ballFactory, wallsFactory);
             physicsManager = new PhysicsManager(session, hudManager, v -> {
@@ -104,11 +98,16 @@ public class ArkanoidApp extends GameApplication {
         EventBus.subscribe(EventType.LAST_DESTRUCTIBLE_DESTROYED, e -> levelManager.onLevelCleared());
         EventBus.subscribe(EventType.GAME_OVER, e -> levelManager.onGameOver(() -> {
         }));
+
         levelManager.startInitialLevel();
 
-        Stage stage = FXGL.getPrimaryStage();
-        ResolutionManager.getInstance().applyScale(stage, FXGL.getGameScene().getRoot());
-        ResolutionManager.getInstance().hookResizeListeners(stage, FXGL.getGameScene().getRoot());
+        FXGL.getGameTimer().runOnceAfter(() -> {
+            Stage stage = FXGL.getPrimaryStage();
+            ConfigOptions cfg = ConfigIO.loadOrDefault();
+            Resolution res = Resolution.getFromHeight(cfg.height);
+            ResolutionManager.getInstance().applyWindowed(stage, FXGL.getGameScene().getRoot(), res);
+            ResolutionManager.getInstance().hookResizeListeners(stage, FXGL.getGameScene().getRoot());
+        }, javafx.util.Duration.millis(1));
     }
 
     @Override

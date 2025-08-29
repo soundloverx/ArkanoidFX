@@ -32,8 +32,8 @@ public class LevelBuilder {
     }
 
     public void buildBricks(LevelEntity level) {
-        brickW = ResolutionManager.getScaledEntity(EntityType.BRICK).getX();
-        brickH = ResolutionManager.getScaledEntity(EntityType.BRICK).getY();
+        brickW = EntityType.BRICK.getDesignWidth();
+        brickH = EntityType.BRICK.getDesignHeight();
         for (LevelEntity.Cell cell : level.cells) {
             BrickEntity def = entityDefinitions.getBrick(cell.brickId);
             if (def == null) {

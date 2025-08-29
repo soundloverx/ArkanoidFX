@@ -29,9 +29,9 @@ public final class BallFactory {
     }
 
     public void spawnBallAttachedToPaddle(Entity paddle) {
-        double ballWidth = ResolutionManager.getScaledEntity(EntityType.BALL).getX();
-        double ballHeight = ResolutionManager.getScaledEntity(EntityType.BALL).getY();
-        double paddleY = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getHeight() - 80, Axis.HORIZONTAL);
+        double ballWidth = EntityType.BALL.getDesignWidth();
+        double ballHeight = EntityType.BALL.getDesignHeight();
+        double paddleY = ResolutionManager.DESIGN_RESOLUTION.getHeight() - 80;
         Texture ballTexture = createBallTexture(ballWidth, ballHeight);
         double startX = paddle.getX() + paddle.getWidth() / 2.0 - ballWidth / 2.0;
         double startY = paddleY - ballHeight - 4.0;
@@ -40,8 +40,8 @@ public final class BallFactory {
     }
 
     public void spawnLaunchedBallAt(double x, double y, Point2D velocity, Entity paddle) {
-        double ballWidth = ResolutionManager.getScaledEntity(EntityType.BALL).getX();
-        double ballHeight = ResolutionManager.getScaledEntity(EntityType.BALL).getY();
+        double ballWidth = EntityType.BALL.getDesignWidth();
+        double ballHeight = EntityType.BALL.getDesignHeight();
         Texture ballTexture = createBallTexture(ballWidth, ballHeight);
         Entity ball = buildBaseBall(x, y, ballWidth, ballHeight, ballTexture);
         attachBallComponents(ball, ballTexture, paddle);

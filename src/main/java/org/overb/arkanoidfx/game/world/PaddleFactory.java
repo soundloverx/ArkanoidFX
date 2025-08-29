@@ -28,9 +28,9 @@ public final class PaddleFactory {
 
     public Entity spawnPaddle() {
         PaddleEntity paddleDefinition = repository.getPaddles().values().stream().findFirst().orElse(null);
-        double paddleWidth = ResolutionManager.getScaledEntity(EntityType.PADDLE).getX();
-        double paddleHeight = ResolutionManager.getScaledEntity(EntityType.PADDLE).getY();
-        double y = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getHeight() - 80, Axis.HORIZONTAL);
+        double paddleWidth = EntityType.PADDLE.getDesignWidth();
+        double paddleHeight = EntityType.PADDLE.getDesignHeight();
+        double y = ResolutionManager.DESIGN_RESOLUTION.getHeight() - 80;
         double mouseX = com.almasb.fxgl.dsl.FXGL.getInput().getMousePositionWorld().getX();
         double x = mouseX - paddleWidth / 2.0;
         double minX = 0.0;

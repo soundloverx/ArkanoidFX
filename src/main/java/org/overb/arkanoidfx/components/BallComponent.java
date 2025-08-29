@@ -15,7 +15,7 @@ import org.overb.arkanoidfx.game.ResolutionManager;
 public class BallComponent extends Component {
 
     private static final double BASE_DESIGN_SPEED = 700.0; // pixels/sec at 1080p
-    private static double BASE_SPEED;
+    private static double BASE_SPEED = BASE_DESIGN_SPEED;
     private static final double MIN_SPEED_MULTIPLIER = 0.5;
     private static final double MAX_SPEED_MULTIPLIER = 2.4;
     private static final double STEP_FRACTION_OF_BALL = 0.25;
@@ -40,10 +40,6 @@ public class BallComponent extends Component {
 
     public BallComponent(Entity paddle) {
         this.paddle = paddle;
-    }
-
-    public static void refreshBaseSpeedAtCurrentResolution() {
-        BASE_SPEED = ResolutionManager.getScaledValue(BASE_DESIGN_SPEED, Axis.VERTICAL);
     }
 
     public void setSounds(String hitWall, String hitPaddle, String lost) {

@@ -51,7 +51,6 @@ jpackage ^
   --runtime-image build\runtime ^
   --win-menu ^
   --win-shortcut ^
-  --win-console ^
   --win-per-user-install
 
 

@@ -22,7 +22,6 @@ public final class LevelManager {
     private final EntityRepository repository;
     private final GameSession session;
     private final HUDManager hudManager;
-    private final MusicService musicService;
     private final WallsFactory wallsFactory;
     private final PaddleFactory paddleFactory;
     private final BallFactory ballFactory;
@@ -32,12 +31,11 @@ public final class LevelManager {
     private int currentLevelIndex = 0;
     private LevelEntity currentLevel;
 
-    public LevelManager(EntityRepository repository, GameSession session, HUDManager hudManager, MusicService musicService,
-                        WallsFactory wallsFactory, PaddleFactory paddleFactory, BallFactory ballFactory, LevelLoader levelLoader) {
+    public LevelManager(EntityRepository repository, GameSession session, HUDManager hudManager, WallsFactory wallsFactory,
+                        PaddleFactory paddleFactory, BallFactory ballFactory, LevelLoader levelLoader) {
         this.repository = repository;
         this.session = session;
         this.hudManager = hudManager;
-        this.musicService = musicService;
         this.wallsFactory = wallsFactory;
         this.paddleFactory = paddleFactory;
         this.ballFactory = ballFactory;
@@ -59,12 +57,12 @@ public final class LevelManager {
     public void spawnPaddleAndBall() {
         Entity paddle = paddleFactory.spawnPaddle();
         ballFactory.spawnBallAttachedToPaddle(paddle);
-        musicService.startLevelMusicIfNeeded(currentLevel);
+        MusicService.getInstance().startLevelMusicIfNeeded(currentLevel.music);
         hudManager.refresh(session);
     }
 
     public void onLevelCleared() {
-        musicService.stopCurrentMusic();
+        MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameWorld().getEntitiesByType(
                 EntityType.BALL, EntityType.SURPRISE, EntityType.BRICK, EntityType.WALL_SAFETY, EntityType.PADDLE
         ).forEach(e -> {
@@ -86,7 +84,7 @@ public final class LevelManager {
     }
 
     public void onGameOver(Runnable afterDialog) {
-        musicService.stopCurrentMusic();
+        MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameWorld().getEntitiesByType(
                 EntityType.BALL, EntityType.SURPRISE, EntityType.BRICK, EntityType.WALL_SAFETY, EntityType.PADDLE
         ).forEach(e -> {

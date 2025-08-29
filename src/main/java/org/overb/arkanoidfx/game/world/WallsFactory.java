@@ -22,39 +22,35 @@ public final class WallsFactory {
         new EntityBuilder()
                 .type(EntityType.WALL_LEFT)
                 .at(0, 0)
-                .bbox(new HitBox(BoundingShape.box(2, ResolutionManager.getScaledEntity(EntityType.WALL_LEFT).getY())))
+                .bbox(new HitBox(BoundingShape.box(2, ResolutionManager.DESIGN_RESOLUTION.getHeight())))
                 .with(new CollidableComponent(true))
                 .buildAndAttach();
-
         new EntityBuilder()
                 .type(EntityType.WALL_RIGHT)
-                .at(ResolutionManager.getInstance().getCurrentResolution().getWidth() - 2, 0)
-                .bbox(new HitBox(BoundingShape.box(2, ResolutionManager.getScaledEntity(EntityType.WALL_RIGHT).getY())))
+                .at(ResolutionManager.DESIGN_RESOLUTION.getWidth() - 2, 0)
+                .bbox(new HitBox(BoundingShape.box(2, ResolutionManager.DESIGN_RESOLUTION.getHeight())))
                 .with(new CollidableComponent(true))
                 .buildAndAttach();
-
         new EntityBuilder()
                 .type(EntityType.WALL_TOP)
                 .at(0, -2)
-                .bbox(new HitBox(BoundingShape.box(ResolutionManager.getScaledEntity(EntityType.WALL_TOP).getX(), 2)))
+                .bbox(new HitBox(BoundingShape.box(ResolutionManager.DESIGN_RESOLUTION.getWidth(), 2)))
                 .with(new CollidableComponent(true))
                 .buildAndAttach();
-
         new EntityBuilder()
                 .type(EntityType.WALL_BOTTOM_SENSOR)
-                .at(0, ResolutionManager.getInstance().getCurrentResolution().getHeight() - 2)
-                .bbox(new HitBox(BoundingShape.box(ResolutionManager.getScaledEntity(EntityType.WALL_BOTTOM_SENSOR).getX(), 50)))
+                .at(0, ResolutionManager.DESIGN_RESOLUTION.getHeight() - 2)
+                .bbox(new HitBox(BoundingShape.box(ResolutionManager.DESIGN_RESOLUTION.getWidth(), 50)))
                 .with(new CollidableComponent(true))
                 .buildAndAttach();
     }
 
     public void enableSafetyWall(double durationSeconds) {
         if (safetyWall == null || !safetyWall.isActive()) {
-            double sceneWidth = ResolutionManager.getInstance().getCurrentResolution().getWidth();
+            double sceneWidth = ResolutionManager.DESIGN_RESOLUTION.getWidth();
             double viewHeight = 8.0;
             double bboxHeight = 8.0;
-            double y = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getHeight() - 40.0, Axis.VERTICAL);
-
+            double y = ResolutionManager.DESIGN_RESOLUTION.getHeight() - 40.0;
             safetyWall = new EntityBuilder()
                     .type(EntityType.WALL_SAFETY)
                     .at(0, y)
