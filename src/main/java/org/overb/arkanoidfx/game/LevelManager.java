@@ -19,6 +19,10 @@ import java.util.List;
 @Log
 public final class LevelManager {
 
+    public interface MenuReturnHandler {
+        void showMainMenu();
+    }
+
     private final EntityRepository repository;
     private final GameSession session;
     private final HUDManager hudManager;
@@ -26,6 +30,7 @@ public final class LevelManager {
     private final PaddleFactory paddleFactory;
     private final BallFactory ballFactory;
     private final LevelLoader levelLoader;
+    private MenuReturnHandler menuReturnHandler;
 
     private List<String> levelOrder;
     private int currentLevelIndex = 0;
@@ -40,6 +45,37 @@ public final class LevelManager {
         this.paddleFactory = paddleFactory;
         this.ballFactory = ballFactory;
         this.levelLoader = levelLoader;
+    }
+
+    public void setMenuReturnHandler(MenuReturnHandler handler) {
+        this.menuReturnHandler = handler;
+    }
+
+    public void quitToMainMenuNoDialog() {
+        // Clean up entities and session, then go to main menu without showing any dialog
+        MusicService.getInstance().stopCurrentMusic();
+        FXGL.getGameWorld().getEntitiesByType(
+                EntityType.BALL, EntityType.SURPRISE, EntityType.BRICK, EntityType.WALL_SAFETY, EntityType.PADDLE
+        ).forEach(e -> {
+            if (e.isActive()) {
+                e.removeFromWorld();
+            }
+        });
+        session.resetForNewGame();
+        currentLevelIndex = 0;
+        returnToMainMenu();
+    }
+
+    private void returnToMainMenu() {
+        // clear any UI/HUD and switch background to black
+        FXGL.getGameScene().clearUINodes();
+        FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
+        // stop any level music and start main menu music
+        MusicService.getInstance().stopCurrentMusic();
+        MusicService.getInstance().play("main_menu.mp3");
+        if (menuReturnHandler != null) {
+            menuReturnHandler.showMainMenu();
+        }
     }
 
     public void setLevelOrder(List<String> levelOrder) {
@@ -57,7 +93,7 @@ public final class LevelManager {
     public void spawnPaddleAndBall() {
         Entity paddle = paddleFactory.spawnPaddle();
         ballFactory.spawnBallAttachedToPaddle(paddle);
-        MusicService.getInstance().startLevelMusicIfNeeded(currentLevel.music);
+        MusicService.getInstance().play(currentLevel.music);
         hudManager.refresh(session);
     }
 
@@ -76,7 +112,12 @@ public final class LevelManager {
             return;
         }
         if (nextIndex >= levelOrder.size()) {
-            FXGL.getDialogService().showMessageBox("Victory! Score: " + session.getScoreRounded(), this::loadAndStart);
+            // Last level finished: go back to main menu after dialog
+            FXGL.getDialogService().showMessageBox("Victory! Score: " + session.getScoreRounded(), () -> {
+                session.resetForNewGame();
+                currentLevelIndex = 0;
+                returnToMainMenu();
+            });
         } else {
             currentLevelIndex = nextIndex;
             FXGL.getDialogService().showMessageBox("Level Cleared!", this::loadAndStart);
@@ -95,7 +136,7 @@ public final class LevelManager {
         FXGL.getDialogService().showMessageBox("Game Over! Score: " + session.getScoreRounded(), () -> {
             session.resetForNewGame();
             currentLevelIndex = 0;
-            loadAndStart();
+            returnToMainMenu();
             if (afterDialog != null) {
                 afterDialog.run();
             }

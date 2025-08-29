@@ -14,7 +14,7 @@ public final class MusicService {
         return INSTANCE;
     }
 
-    public void startLevelMusicIfNeeded(String song) {
+    public void play(String song) {
         if (levelMusicStarted || song == null || song.isBlank()) {
             return;
         }

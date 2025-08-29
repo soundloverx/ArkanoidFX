@@ -7,6 +7,8 @@ import com.almasb.fxgl.entity.Entity;
 import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.extern.java.Log;
+import org.overb.arkanoidfx.audio.AudioMixer;
+import org.overb.arkanoidfx.audio.MusicService;
 import org.overb.arkanoidfx.audio.SfxBus;
 import org.overb.arkanoidfx.components.BallComponent;
 import org.overb.arkanoidfx.components.DebugHitboxViewComponent;
@@ -27,6 +29,7 @@ import org.overb.arkanoidfx.game.loaders.LevelLoader;
 import org.overb.arkanoidfx.game.ui.HUDManager;
 import org.overb.arkanoidfx.game.ui.MainMenuUI;
 import org.overb.arkanoidfx.game.ui.OptionsMenuUI;
+import org.overb.arkanoidfx.game.ui.PauseMenuUI;
 import org.overb.arkanoidfx.game.world.BallFactory;
 import org.overb.arkanoidfx.game.world.PaddleFactory;
 import org.overb.arkanoidfx.game.world.WallsFactory;
@@ -38,6 +41,8 @@ public class ArkanoidApp extends GameApplication {
 
     private MainMenuUI mainMenu;
     private OptionsMenuUI optionsMenu;
+    private PauseMenuUI pauseMenu;
+    private boolean paused = false;
 
     @Getter
     private EntityRepository entityRepository;
@@ -90,6 +95,10 @@ public class ArkanoidApp extends GameApplication {
             paddleFactory = new PaddleFactory(entityRepository);
             levelManager = new LevelManager(entityRepository, session, hudManager, wallsFactory, paddleFactory, ballFactory, levelLoader);
             levelManager.setLevelOrder(levelOrder);
+            levelManager.setMenuReturnHandler(() -> {
+                showMainMenu();
+                MusicService.getInstance().play("main_menu.mp3");
+            });
             surpriseService = new SurpriseService(ballFactory, wallsFactory);
             physicsManager = new PhysicsManager(session, hudManager, v -> {
                 levelManager.spawnPaddleAndBall();
@@ -104,25 +113,18 @@ public class ArkanoidApp extends GameApplication {
         EventBus.subscribe(EventType.GAME_OVER, e -> levelManager.onGameOver(() -> {
         }));
 
-        // Initialize UI: show Main Menu instead of starting the level directly
-        // Ensure scene background is black while in menus
         FXGL.getGameScene().setBackgroundColor(javafx.scene.paint.Color.BLACK);
         showMainMenu();
-
+        MusicService.getInstance().play("main_menu.mp3");
         FXGL.getGameTimer().runOnceAfter(() -> {
             Stage stage = FXGL.getPrimaryStage();
             ConfigOptions cfg = ConfigIO.loadOrDefault();
-            // Apply volumes from config at startup
-            org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMasterVolume(cfg.audio.master);
-            org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMusicVolume(cfg.audio.music);
-            org.overb.arkanoidfx.audio.AudioMixer.getInstance().setSfxVolume(cfg.audio.sfx);
-
+            AudioMixer.getInstance().setMasterVolume(cfg.audio.master);
+            AudioMixer.getInstance().setMusicVolume(cfg.audio.music);
+            AudioMixer.getInstance().setSfxVolume(cfg.audio.sfx);
             Resolution res = Resolution.getFromHeight(cfg.height);
             ResolutionManager.getInstance().applyWindowed(stage, FXGL.getGameScene().getRoot(), res);
             ResolutionManager.getInstance().hookResizeListeners(stage, FXGL.getGameScene().getRoot());
-
-            // Start main menu music
-            org.overb.arkanoidfx.audio.MusicBus.getInstance().loop("main_menu.mp3");
         }, javafx.util.Duration.millis(1));
     }
 
@@ -147,16 +149,12 @@ public class ArkanoidApp extends GameApplication {
         ConfigOptions cfg = ConfigIO.loadOrDefault();
         if (optionsMenu == null) {
             optionsMenu = new OptionsMenuUI(cfg, (orig, updated) -> {
-                // Apply and save configuration
                 applyAndSaveConfig(updated);
-                // Return to main menu after apply
                 showMainMenu();
             }, v -> {
-                // Cancel: restore original volumes already handled; return to main
                 showMainMenu();
             });
         } else {
-            // rebuild with latest cfg values for selections
             optionsMenu = new OptionsMenuUI(cfg, (orig, updated) -> {
                 applyAndSaveConfig(updated);
                 showMainMenu();
@@ -167,12 +165,9 @@ public class ArkanoidApp extends GameApplication {
     }
 
     private void applyAndSaveConfig(ConfigOptions updated) {
-        // Volumes
-        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMasterVolume(updated.audio.master);
-        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMusicVolume(updated.audio.music);
-        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setSfxVolume(updated.audio.sfx);
-
-        // Window mode and resolution
+        AudioMixer.getInstance().setMasterVolume(updated.audio.master);
+        AudioMixer.getInstance().setMusicVolume(updated.audio.music);
+        AudioMixer.getInstance().setSfxVolume(updated.audio.sfx);
         Stage stage = FXGL.getPrimaryStage();
         if ("FULLSCREEN".equalsIgnoreCase(updated.fullscreenMode)) {
             stage.setFullScreen(true);
@@ -180,19 +175,15 @@ public class ArkanoidApp extends GameApplication {
             Resolution res = Resolution.getFromHeight(updated.height);
             ResolutionManager.getInstance().applyWindowed(stage, FXGL.getGameScene().getRoot(), res);
         }
-        // Nudge UI to relayout/center after resolution change
         FXGL.runOnce(() -> {
             if (optionsMenu != null && optionsMenu.isVisible()) optionsMenu.requestLayout();
             if (mainMenu != null && mainMenu.isVisible()) mainMenu.requestLayout();
         }, javafx.util.Duration.millis(50));
-        // Persist
         ConfigIO.save(updated);
     }
 
     private void startGameFromMenu() {
-        // stop menu music, start game
-        org.overb.arkanoidfx.audio.MusicService.getInstance().stopCurrentMusic();
-        org.overb.arkanoidfx.audio.MusicBus.getInstance().stop();
+        MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameScene().clearUINodes();
         levelManager.startInitialLevel();
     }
@@ -206,6 +197,8 @@ public class ArkanoidApp extends GameApplication {
 
     @Override
     protected void initInput() {
+        // Pause / unpause
+        FXGL.onKeyDown(javafx.scene.input.KeyCode.ESCAPE, this::onPauseToggle);
         // release ball on click
         FXGL.onBtnDown(javafx.scene.input.MouseButton.PRIMARY, () -> {
             var balls = FXGL.getGameWorld().getEntitiesByType(EntityType.BALL);
@@ -250,6 +243,63 @@ public class ArkanoidApp extends GameApplication {
             session.addLife();
             EventBus.publish(GameEvent.of(EventType.HUD_UPDATE));
         }
+    }
+
+    private void onPauseToggle() {
+        // Only toggle pause when gameplay is running (no main/options menu currently visible)
+        if (isAnyMenuVisible()) {
+            return;
+        }
+        if (!paused) {
+            // Enter pause: stop timers and physics, show pause menu
+            paused = true;
+            FXGL.getGameController().pauseEngine();
+            showPauseMenu();
+        } else {
+            // Resume
+            resumeFromPause();
+        }
+    }
+
+    private boolean isAnyMenuVisible() {
+        // If the UI root has our main or options menu, consider not in gameplay
+        // We check by references we manage
+        if (mainMenu != null && mainMenu.getParent() != null && mainMenu.isVisible()) return true;
+        if (optionsMenu != null && optionsMenu.getParent() != null && optionsMenu.isVisible()) return true;
+        return false;
+    }
+
+    private void showPauseMenu() {
+        if (pauseMenu == null) {
+            pauseMenu = new PauseMenuUI(item -> {
+                switch (item) {
+                    case RESUME -> resumeFromPause();
+                    case QUIT_TO_MAIN -> quitToMainFromPause();
+                    case EXIT -> FXGL.getGameController().exit();
+                }
+            });
+        }
+        FXGL.getGameScene().addUINodes(pauseMenu);
+    }
+
+    private void resumeFromPause() {
+        if (!paused) return;
+        paused = false;
+        FXGL.getGameController().resumeEngine();
+        if (pauseMenu != null) {
+            FXGL.getGameScene().removeUINode(pauseMenu);
+        }
+    }
+
+    private void quitToMainFromPause() {
+        // Ensure we are not left paused
+        paused = false;
+        FXGL.getGameController().resumeEngine();
+        if (pauseMenu != null) {
+            FXGL.getGameScene().removeUINode(pauseMenu);
+        }
+        // Return to main menu without dialog, clearing entities
+        levelManager.quitToMainMenuNoDialog();
     }
 
     public static void main(String[] args) {
