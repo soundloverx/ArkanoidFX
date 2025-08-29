@@ -13,7 +13,6 @@ import org.overb.arkanoidfx.components.BallAnimComponent;
 import org.overb.arkanoidfx.components.BallComponent;
 import org.overb.arkanoidfx.entities.BallEntity;
 import org.overb.arkanoidfx.entities.EntityRepository;
-import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.ResolutionManager;
 import org.overb.arkanoidfx.util.TextureUtils;

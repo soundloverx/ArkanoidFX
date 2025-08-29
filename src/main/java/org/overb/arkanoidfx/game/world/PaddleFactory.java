@@ -12,7 +12,6 @@ import org.overb.arkanoidfx.components.PaddleAnimComponent;
 import org.overb.arkanoidfx.components.PaddleComponent;
 import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.PaddleEntity;
-import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.ResolutionManager;
 

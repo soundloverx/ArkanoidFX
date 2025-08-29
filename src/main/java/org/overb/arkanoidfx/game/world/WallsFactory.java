@@ -9,7 +9,6 @@ import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.time.TimerAction;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.ResolutionManager;
 

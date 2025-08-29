@@ -10,7 +10,6 @@ import lombok.Setter;
 import org.overb.arkanoidfx.audio.SfxBus;
 import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.enums.EntityType;
-import org.overb.arkanoidfx.game.ResolutionManager;
 
 public class BallComponent extends Component {
 

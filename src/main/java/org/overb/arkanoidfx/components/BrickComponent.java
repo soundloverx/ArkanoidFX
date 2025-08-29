@@ -8,15 +8,15 @@ import com.almasb.fxgl.texture.Texture;
 import com.almasb.fxgl.time.TimerAction;
 import javafx.geometry.Point2D;
 import javafx.util.Duration;
-import org.overb.arkanoidfx.game.world.SurpriseFactory;
 import org.overb.arkanoidfx.audio.SfxBus;
-import org.overb.arkanoidfx.game.core.EventBus;
-import org.overb.arkanoidfx.game.core.GameEvent;
 import org.overb.arkanoidfx.entities.BrickEntity;
 import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.SurpriseEntity;
 import org.overb.arkanoidfx.enums.EventType;
 import org.overb.arkanoidfx.game.GameSession;
+import org.overb.arkanoidfx.game.core.EventBus;
+import org.overb.arkanoidfx.game.core.GameEvent;
+import org.overb.arkanoidfx.game.world.SurpriseFactory;
 import org.overb.arkanoidfx.util.BallQueries;
 import org.overb.arkanoidfx.util.TextureUtils;
 

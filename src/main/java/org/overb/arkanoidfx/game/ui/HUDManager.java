@@ -4,7 +4,6 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.time.TimerAction;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
-import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.game.GameSession;
 import org.overb.arkanoidfx.game.ResolutionManager;
 

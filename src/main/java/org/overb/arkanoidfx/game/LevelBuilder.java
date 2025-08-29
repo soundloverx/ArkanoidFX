@@ -14,8 +14,8 @@ import org.overb.arkanoidfx.entities.BrickEntity;
 import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.LevelEntity;
 import org.overb.arkanoidfx.enums.EntityType;
-import org.overb.arkanoidfx.util.TextureUtils;
 import org.overb.arkanoidfx.game.world.SurpriseFactory;
+import org.overb.arkanoidfx.util.TextureUtils;
 
 public class LevelBuilder {
 

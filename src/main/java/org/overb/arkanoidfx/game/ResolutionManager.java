@@ -1,10 +1,8 @@
 package org.overb.arkanoidfx.game;
 
 import com.almasb.fxgl.dsl.FXGL;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.overb.arkanoidfx.enums.Resolution;
 
