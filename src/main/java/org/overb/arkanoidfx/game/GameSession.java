@@ -1,6 +1,7 @@
 package org.overb.arkanoidfx.game;
 
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 public final class GameSession {
@@ -10,6 +11,8 @@ public final class GameSession {
     private int lives = 3;
     private int destructibleBricksLeft = 0;
     private int lastGain = 0;
+    @Setter
+    private int currentLevel = 0;
     private double lastMultiplier = 1.0;
 
     private static double comboSpeedMultiplier(int comboCount, double sNorm) {
@@ -61,5 +64,9 @@ public final class GameSession {
 
     public int getScoreRounded() {
         return (int) Math.round(score);
+    }
+
+    public void addLife() {
+        lives++;
     }
 }

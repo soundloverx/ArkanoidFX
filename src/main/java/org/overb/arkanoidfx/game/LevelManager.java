@@ -26,7 +26,7 @@ public final class LevelManager {
     private final WallsFactory wallsFactory;
     private final PaddleFactory paddleFactory;
     private final BallFactory ballFactory;
-    private final org.overb.arkanoidfx.game.loaders.LevelLoader levelLoader; // new dependency
+    private final LevelLoader levelLoader;
 
     private List<String> levelOrder;
     private int currentLevelIndex = 0;
@@ -53,7 +53,7 @@ public final class LevelManager {
         if (levelOrder == null || levelOrder.isEmpty()) {
             throw new IllegalStateException("Level order is not set or empty");
         }
-        loadAndStart(levelOrder.get(currentLevelIndex));
+        loadAndStart();
     }
 
     public void spawnPaddleAndBall() {
@@ -74,20 +74,14 @@ public final class LevelManager {
         });
         int nextIndex = currentLevelIndex + 1;
         if (levelOrder == null || levelOrder.isEmpty()) {
-            FXGL.getDialogService().showMessageBox("Level Cleared!", () -> {
-                loadAndStart(levelOrder.get(currentLevelIndex));
-            });
+            FXGL.getDialogService().showMessageBox("Level Cleared!", this::loadAndStart);
             return;
         }
         if (nextIndex >= levelOrder.size()) {
-            FXGL.getDialogService().showMessageBox("Victory! Score: " + session.getScoreRounded(), () -> {
-                loadAndStart(levelOrder.get(currentLevelIndex));
-            });
+            FXGL.getDialogService().showMessageBox("Victory! Score: " + session.getScoreRounded(), this::loadAndStart);
         } else {
             currentLevelIndex = nextIndex;
-            FXGL.getDialogService().showMessageBox("Level Cleared!", () -> {
-                loadAndStart(levelOrder.get(currentLevelIndex));
-            });
+            FXGL.getDialogService().showMessageBox("Level Cleared!", this::loadAndStart);
         }
     }
 
@@ -103,14 +97,16 @@ public final class LevelManager {
         FXGL.getDialogService().showMessageBox("Game Over! Score: " + session.getScoreRounded(), () -> {
             session.resetForNewGame();
             currentLevelIndex = 0;
-            loadAndStart(levelOrder.get(currentLevelIndex));
+            loadAndStart();
             if (afterDialog != null) {
                 afterDialog.run();
             }
         });
     }
 
-    private void loadAndStart(String levelFileName) {
+    private void loadAndStart() {
+        session.setCurrentLevel(currentLevelIndex + 1);
+        String levelFileName = levelOrder.get(currentLevelIndex);
         FXGL.getGameScene().clearUINodes();
         FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
         session.resetLevel();

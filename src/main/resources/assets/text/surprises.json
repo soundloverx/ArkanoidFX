@@ -15,7 +15,8 @@
       "params": {
         "count": 3
       },
-      "spawnChance": 0.12
+      "spawnChance": 0.1,
+      "sound": "surprise_pickup.wav"
     },
     {
       "id": 2,
@@ -31,7 +32,24 @@
       "effect": "SAFETY_WALL",
       "params": {
         "durationSec": 10
-      }
+      },
+      "spawnChance": 0.1,
+      "sound": "surprise_pickup.wav"
+    },
+    {
+      "id": 3,
+      "name": "bonus_life",
+      "visual": {
+        "sprite": "surprise_life.png",
+        "frames": 20,
+        "frameW": 35,
+        "frameH": 30,
+        "frameDuration": 0.08
+      },
+      "fallSpeed": 140,
+      "effect": "BONUS_LIFE",
+      "spawnChance": 0.05,
+      "sound": "bonus_life.wav"
     }
   ]
 }

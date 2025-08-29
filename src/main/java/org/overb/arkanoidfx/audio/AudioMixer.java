@@ -6,8 +6,8 @@ import lombok.Getter;
 public final class AudioMixer {
 
     private static final AudioMixer INSTANCE = new AudioMixer();
-    private double masterVolume = 1.0;
-    private double musicVolume = 1.0;
+    private double masterVolume = 0.8;
+    private double musicVolume = 0.5;
     private double sfxVolume = 1.0;
 
     public static AudioMixer getInstance() {

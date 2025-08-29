@@ -1,7 +1,6 @@
 # Default levels
 
-# level_01.json
-# level_02.json
+level_02.json
 level_03.json
 level_04.json
 level_05.json

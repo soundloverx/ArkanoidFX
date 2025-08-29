@@ -10,16 +10,18 @@ import lombok.Setter;
 import org.overb.arkanoidfx.audio.SfxBus;
 import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.enums.EntityType;
+import org.overb.arkanoidfx.game.ResolutionManager;
 
 public class BallComponent extends Component {
 
-    private static final double BASE_SPEED = 700.0; // pixels/sec at 1080p
+    private static final double BASE_DESIGN_SPEED = 700.0; // pixels/sec at 1080p
+    private static double BASE_SPEED;
     private static final double MIN_SPEED_MULTIPLIER = 0.5;
-    private static final double MAX_SPEED_MULTIPLIER = 3.0;
-    private static final double STEP_FRACTION_OF_BALL = 0.5; // half-ball size for substeps
-    private static final int MAX_SUBSTEPS_PER_FRAME = 32;
+    private static final double MAX_SPEED_MULTIPLIER = 2.4;
+    private static final double STEP_FRACTION_OF_BALL = 0.25;
+    private static final int MAX_SUBSTEPS_PER_FRAME = 64;
     private static final double NUDGE = 0.25; // small nudge after bounce to avoid hitting the same brick twice
-    private static final int CONTACT_SEARCH_ITERS = 7; // binary search iterations to find contact
+    private static final int CONTACT_SEARCH_ITERS = 3; // binary search iterations to find contact
     // anti-trap parameters
     private static final double MIN_ABS_VY = 60.0;      // minimum vertical speed component after any bounce
     private static final double TINY_JITTER_RAD = 0.02; // small jitter to avoid infinite vertical bouncing
@@ -38,6 +40,10 @@ public class BallComponent extends Component {
 
     public BallComponent(Entity paddle) {
         this.paddle = paddle;
+    }
+
+    public static void refreshBaseSpeedAtCurrentResolution() {
+        BASE_SPEED = ResolutionManager.getScaledValue(BASE_DESIGN_SPEED, Axis.VERTICAL);
     }
 
     public void setSounds(String hitWall, String hitPaddle, String lost) {

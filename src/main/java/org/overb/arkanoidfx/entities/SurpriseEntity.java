@@ -9,5 +9,6 @@ public class SurpriseEntity {
     public Sprite visual;
     public double fallSpeed;
     public String effect;
+    public String sound;
     public double spawnChance;
 }

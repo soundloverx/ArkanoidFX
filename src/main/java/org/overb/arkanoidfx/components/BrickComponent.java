@@ -134,6 +134,7 @@ public class BrickComponent extends Component {
             return;
         }
         surpriseFactory.buildAt(x, y, chosen).ifPresent(e -> FXGL.getGameWorld().addEntity(e));
+        SfxBus.getInstance().play("surprise.wav");
     }
 
     private void advanceFrame() {

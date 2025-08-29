@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import lombok.Getter;
+import lombok.Setter;
 import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.enums.Resolution;
@@ -17,7 +18,8 @@ public final class ResolutionManager {
     public static final ResolutionManager INSTANCE = new ResolutionManager();
     public static final Resolution DESIGN_RESOLUTION = Resolution.R1920x1080;
     @Getter
-    private Resolution currentResolution = Resolution.R1920x1080;
+    @Setter
+    private Resolution currentResolution = Resolution.R1280x720;
 
     public static ResolutionManager getInstance() {
         return INSTANCE;

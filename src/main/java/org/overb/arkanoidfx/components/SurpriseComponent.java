@@ -24,4 +24,8 @@ public class SurpriseComponent extends Component {
     public String getEffect() {
         return surpriseDefinition.effect;
     }
+
+    public String getSound() {
+        return surpriseDefinition.sound;
+    }
 }

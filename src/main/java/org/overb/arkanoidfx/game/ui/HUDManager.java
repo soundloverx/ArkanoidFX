@@ -14,6 +14,7 @@ public final class HUDManager {
     private Text hudCombo;
     private Text hudLives;
     private Text hudMultiplier;
+    private Text hudLevel;
     private Text hudFps;
     private long fpsFrames = 0;
     private TimerAction fpsTimer;
@@ -24,16 +25,18 @@ public final class HUDManager {
             hudCombo = new Text();
             hudLives = new Text();
             hudMultiplier = new Text();
+            hudLevel = new Text();
             hudFps = new Text("FPS: --");
 
             hudScore.setFill(Color.WHITE);
             hudCombo.setFill(Color.LIGHTGRAY);
             hudLives.setFill(Color.WHITE);
             hudMultiplier.setFill(Color.LIGHTGREEN);
+            hudLevel.setFill(Color.WHITE);
             hudFps.setFill(Color.YELLOW);
         }
 
-        FXGL.getGameScene().addUINodes(hudScore, hudCombo, hudMultiplier, hudLives, hudFps);
+        FXGL.getGameScene().addUINodes(hudScore, hudCombo, hudMultiplier, hudLives, hudLevel, hudFps);
         if (fpsTimer != null) {
             fpsTimer.expire();
             fpsTimer = null;
@@ -55,6 +58,7 @@ public final class HUDManager {
         hudScore.setText("Score: " + session.getScoreRounded());
         hudCombo.setText("Combo: " + session.getCombo());
         hudMultiplier.setText(String.format("Modifier: %.2f%%", session.getLastMultiplier() * 100.0));
+        hudLevel.setText("Level: " + session.getCurrentLevel());
         hudLives.setText("Lives: " + session.getLives());
         layoutBottomRightHorizontal();
     }
@@ -64,46 +68,29 @@ public final class HUDManager {
     }
 
     private void layoutBottomRightHorizontal() {
-        double padding = 16.0;
-        double right = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getWidth() - padding, Axis.HORIZONTAL);
-        double bottom = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getHeight() - padding, Axis.VERTICAL);
-        double gap = 16.0;
+        double right = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getWidth() - 16, Axis.HORIZONTAL);
+        double bottom = ResolutionManager.getScaledValue(ResolutionManager.DESIGN_RESOLUTION.getHeight() - 8, Axis.VERTICAL);
 
         hudLives.applyCss();
         hudScore.applyCss();
         hudMultiplier.applyCss();
         hudCombo.applyCss();
+        hudLevel.applyCss();
         hudFps.applyCss();
 
         double x = right;
+        x = placeStatusTextElement(hudLives, x, bottom);
+        x = placeStatusTextElement(hudScore, x, bottom);
+        x = placeStatusTextElement(hudMultiplier, x, bottom);
+        x = placeStatusTextElement(hudCombo, x, bottom);
+        x = placeStatusTextElement(hudLevel, x, bottom);
+        x = placeStatusTextElement(hudFps, x, bottom);
+    }
 
-        double widthLives = hudLives.getLayoutBounds().getWidth();
-        x -= widthLives;
-        hudLives.setX(x);
-        hudLives.setY(bottom);
-        x -= gap;
-
-        double widthScore = hudScore.getLayoutBounds().getWidth();
-        x -= widthScore;
-        hudScore.setX(x);
-        hudScore.setY(bottom);
-        x -= gap;
-
-        double widthMultiplier = hudMultiplier.getLayoutBounds().getWidth();
-        x -= widthMultiplier;
-        hudMultiplier.setX(x);
-        hudMultiplier.setY(bottom);
-        x -= gap;
-
-        double widthCombo = hudCombo.getLayoutBounds().getWidth();
-        x -= widthCombo;
-        hudCombo.setX(x);
-        hudCombo.setY(bottom);
-        x -= gap;
-
-        double widthFps = hudFps.getLayoutBounds().getWidth();
-        x -= widthFps;
-        hudFps.setX(x);
-        hudFps.setY(bottom);
+    private double placeStatusTextElement(Text element, double x, double bottom) {
+        x -= element.getLayoutBounds().getWidth();
+        element.setX(x);
+        element.setY(bottom);
+        return x - 16.0;
     }
 }

@@ -1,7 +1,7 @@
 {
   "cols": 24,
   "rows": 18,
-  "music": "level_01.mp3",
+  "music": "level_02.mp3",
   "cells": [
     { "col": 2, "row": 0, "brickId": 1 },  { "col": 21, "row": 0, "brickId": 4 },
     { "col": 3, "row": 1, "brickId": 1 },  { "col": 20, "row": 1, "brickId": 4 },
@@ -20,8 +20,6 @@
     { "col": 6, "row": 14, "brickId": 1 }, { "col": 17, "row": 14, "brickId": 4 },
     { "col": 5, "row": 15, "brickId": 1 }, { "col": 18, "row": 15, "brickId": 4 },
     { "col": 2, "row": 8, "brickId": 2 }, { "col": 4, "row": 8, "brickId": 2 }, { "col": 6, "row": 8, "brickId": 2 },
-    { "col": 8, "row": 8, "brickId": 2 }, { "col": 10, "row": 8, "brickId": 2 }, { "col": 12, "row": 8, "brickId": 2 },
-    { "col": 14, "row": 8, "brickId": 2 }, { "col": 16, "row": 8, "brickId": 2 }, { "col": 18, "row": 8, "brickId": 2 },
-    { "col": 20, "row": 8, "brickId": 2 }, { "col": 21, "row": 8, "brickId": 2 }
+    { "col": 17, "row": 8, "brickId": 2 }, { "col": 19, "row": 8, "brickId": 2 }, { "col": 21, "row": 8, "brickId": 2 }
   ]
 }
