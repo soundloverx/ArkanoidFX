@@ -25,6 +25,8 @@ import org.overb.arkanoidfx.game.core.PhysicsManager;
 import org.overb.arkanoidfx.game.loaders.DefinitionsLoader;
 import org.overb.arkanoidfx.game.loaders.LevelLoader;
 import org.overb.arkanoidfx.game.ui.HUDManager;
+import org.overb.arkanoidfx.game.ui.MainMenuUI;
+import org.overb.arkanoidfx.game.ui.OptionsMenuUI;
 import org.overb.arkanoidfx.game.world.BallFactory;
 import org.overb.arkanoidfx.game.world.PaddleFactory;
 import org.overb.arkanoidfx.game.world.WallsFactory;
@@ -33,6 +35,9 @@ import java.util.List;
 
 @Log
 public class ArkanoidApp extends GameApplication {
+
+    private MainMenuUI mainMenu;
+    private OptionsMenuUI optionsMenu;
 
     @Getter
     private EntityRepository entityRepository;
@@ -99,15 +104,97 @@ public class ArkanoidApp extends GameApplication {
         EventBus.subscribe(EventType.GAME_OVER, e -> levelManager.onGameOver(() -> {
         }));
 
-        levelManager.startInitialLevel();
+        // Initialize UI: show Main Menu instead of starting the level directly
+        // Ensure scene background is black while in menus
+        FXGL.getGameScene().setBackgroundColor(javafx.scene.paint.Color.BLACK);
+        showMainMenu();
 
         FXGL.getGameTimer().runOnceAfter(() -> {
             Stage stage = FXGL.getPrimaryStage();
             ConfigOptions cfg = ConfigIO.loadOrDefault();
+            // Apply volumes from config at startup
+            org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMasterVolume(cfg.audio.master);
+            org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMusicVolume(cfg.audio.music);
+            org.overb.arkanoidfx.audio.AudioMixer.getInstance().setSfxVolume(cfg.audio.sfx);
+
             Resolution res = Resolution.getFromHeight(cfg.height);
             ResolutionManager.getInstance().applyWindowed(stage, FXGL.getGameScene().getRoot(), res);
             ResolutionManager.getInstance().hookResizeListeners(stage, FXGL.getGameScene().getRoot());
+
+            // Start main menu music
+            org.overb.arkanoidfx.audio.MusicBus.getInstance().loop("main_menu.mp3");
         }, javafx.util.Duration.millis(1));
+    }
+
+    private void showMainMenu() {
+        if (mainMenu == null) {
+            mainMenu = new MainMenuUI(item -> {
+                switch (item) {
+                    case PLAY -> startGameFromMenu();
+                    case EDITOR -> {
+                        // TODO later
+                    }
+                    case OPTIONS -> showOptionsMenu();
+                    case EXIT -> FXGL.getGameController().exit();
+                }
+            });
+        }
+        FXGL.getGameScene().clearUINodes();
+        FXGL.getGameScene().addUINodes(mainMenu);
+    }
+
+    private void showOptionsMenu() {
+        ConfigOptions cfg = ConfigIO.loadOrDefault();
+        if (optionsMenu == null) {
+            optionsMenu = new OptionsMenuUI(cfg, (orig, updated) -> {
+                // Apply and save configuration
+                applyAndSaveConfig(updated);
+                // Return to main menu after apply
+                showMainMenu();
+            }, v -> {
+                // Cancel: restore original volumes already handled; return to main
+                showMainMenu();
+            });
+        } else {
+            // rebuild with latest cfg values for selections
+            optionsMenu = new OptionsMenuUI(cfg, (orig, updated) -> {
+                applyAndSaveConfig(updated);
+                showMainMenu();
+            }, v -> showMainMenu());
+        }
+        FXGL.getGameScene().clearUINodes();
+        FXGL.getGameScene().addUINodes(optionsMenu);
+    }
+
+    private void applyAndSaveConfig(ConfigOptions updated) {
+        // Volumes
+        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMasterVolume(updated.audio.master);
+        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setMusicVolume(updated.audio.music);
+        org.overb.arkanoidfx.audio.AudioMixer.getInstance().setSfxVolume(updated.audio.sfx);
+
+        // Window mode and resolution
+        Stage stage = FXGL.getPrimaryStage();
+        if ("FULLSCREEN".equalsIgnoreCase(updated.fullscreenMode)) {
+            stage.setFullScreen(true);
+        } else {
+            Resolution res = Resolution.getFromHeight(updated.height);
+            ResolutionManager.getInstance().applyWindowed(stage, FXGL.getGameScene().getRoot(), res);
+        }
+        // Nudge UI to relayout/center after resolution change
+        FXGL.runOnce(() -> {
+            if (optionsMenu != null && optionsMenu.isVisible()) optionsMenu.requestLayout();
+            if (mainMenu != null && mainMenu.isVisible()) mainMenu.requestLayout();
+        }, javafx.util.Duration.millis(50));
+        // Persist
+        ConfigIO.save(updated);
+    }
+
+    private void startGameFromMenu() {
+        // stop menu music, start game
+        org.overb.arkanoidfx.audio.MusicService.getInstance().stopCurrentMusic();
+        org.overb.arkanoidfx.audio.MusicBus.getInstance().stop();
+        FXGL.getGameScene().clearUINodes();
+        levelManager.startInitialLevel();
     }
 
     @Override
