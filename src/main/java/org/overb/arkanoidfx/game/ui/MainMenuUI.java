@@ -10,6 +10,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import org.overb.arkanoidfx.game.ResolutionManager;
 
 import java.util.function.Consumer;
 
@@ -21,27 +22,9 @@ public class MainMenuUI extends StackPane {
 
     public MainMenuUI(Consumer<Item> onAction) {
         setStyle("-fx-background-color: black;");
-        sceneProperty().addListener((obs, oldScene, scene) -> {
-            if (scene != null) {
-                minWidthProperty().bind(scene.widthProperty());
-                minHeightProperty().bind(scene.heightProperty());
-                prefWidthProperty().bind(scene.widthProperty());
-                prefHeightProperty().bind(scene.heightProperty());
-                maxWidthProperty().bind(scene.widthProperty());
-                maxHeightProperty().bind(scene.heightProperty());
-            }
-        });
-        if (getScene() != null) {
-            minWidthProperty().bind(getScene().widthProperty());
-            minHeightProperty().bind(getScene().heightProperty());
-            prefWidthProperty().bind(getScene().widthProperty());
-            prefHeightProperty().bind(getScene().heightProperty());
-            maxWidthProperty().bind(getScene().widthProperty());
-            maxHeightProperty().bind(getScene().heightProperty());
-        }
-        setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-
+        setPrefSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
+        setMaxSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
+        setMinSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         menuBox.setAlignment(Pos.CENTER);
         getChildren().add(menuBox);
 
@@ -68,10 +51,9 @@ public class MainMenuUI extends StackPane {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        double w = getWidth();
-        double h = getHeight();
+        double w = ResolutionManager.DESIGN_RESOLUTION.getWidth();
+        double h = ResolutionManager.DESIGN_RESOLUTION.getHeight();
         menuBox.applyCss();
-        menuBox.autosize();
         double mw = Math.max(menuBox.prefWidth(-1), menuBox.getWidth());
         double mh = Math.max(menuBox.prefHeight(-1), menuBox.getHeight());
         double x = (w - mw) / 2.0;

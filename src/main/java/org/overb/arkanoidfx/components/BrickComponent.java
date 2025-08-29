@@ -8,6 +8,7 @@ import com.almasb.fxgl.texture.Texture;
 import com.almasb.fxgl.time.TimerAction;
 import javafx.geometry.Point2D;
 import javafx.util.Duration;
+import lombok.Getter;
 import org.overb.arkanoidfx.audio.SfxBus;
 import org.overb.arkanoidfx.entities.BrickEntity;
 import org.overb.arkanoidfx.entities.EntityRepository;
@@ -31,6 +32,7 @@ public class BrickComponent extends Component {
     private final SurpriseFactory surpriseFactory;
     private int hp;
     private int currentFrame = 0;
+    @Getter
     private boolean destroyed = false;
 
     public BrickComponent(BrickEntity brickEntity, GameSession session, Texture texture,

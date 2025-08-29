@@ -2,6 +2,7 @@ package org.overb.arkanoidfx.game.ui;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.StackPane;
@@ -10,31 +11,28 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
+import org.overb.arkanoidfx.game.ResolutionManager;
 
 import java.util.function.Consumer;
 
 public class PauseMenuUI extends StackPane {
 
     private final VBox menuBox = new VBox(16);
+    private final StackPane menuContainer = new StackPane();
 
     public enum Item { RESUME, QUIT_TO_MAIN, EXIT }
 
     public PauseMenuUI(Consumer<Item> onAction) {
-        setStyle("-fx-background-color: black;");
-        sceneProperty().addListener((obs, oldScene, scene) -> {
-            if (scene != null) {
-                minWidthProperty().bind(scene.widthProperty());
-                minHeightProperty().bind(scene.heightProperty());
-                prefWidthProperty().bind(scene.widthProperty());
-                prefHeightProperty().bind(scene.heightProperty());
-                maxWidthProperty().bind(scene.widthProperty());
-                maxHeightProperty().bind(scene.heightProperty());
-            }
-        });
-        setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        setStyle("-fx-background-color: transparent;");
+        setPrefSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
+        setMaxSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
+        setMinSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         menuBox.setAlignment(Pos.CENTER);
-        getChildren().add(menuBox);
+        menuContainer.getChildren().add(menuBox);
+        menuContainer.setStyle("-fx-border-color: rgba(0,0,0,0.5); -fx-border-width: 1; -fx-border-radius: 6; -fx-background-color: rgba(0,0,0,0.5); -fx-background-radius: 6;");
+        getChildren().add(menuContainer);
+
         Text title = new Text("Paused");
         title.setFill(Color.WHITE);
         title.setFont(Font.font("Verdana", FontWeight.BOLD , 50));
@@ -56,17 +54,21 @@ public class PauseMenuUI extends StackPane {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        double w = getWidth();
-        double h = getHeight();
+        double w = ResolutionManager.DESIGN_RESOLUTION.getWidth();
+        double h = ResolutionManager.DESIGN_RESOLUTION.getHeight();
         menuBox.applyCss();
-        menuBox.autosize();
         double mw = Math.max(menuBox.prefWidth(-1), menuBox.getWidth());
         double mh = Math.max(menuBox.prefHeight(-1), menuBox.getHeight());
-        double x = (w - mw) / 2.0;
-        double y = (h - mh) / 2.0;
+        // add some padding for the border/background visuals
+        double pad = 16;
+        double cw = mw + pad * 2;
+        double ch = mh + pad * 2;
+        menuContainer.setPadding(new Insets(pad));
+        double x = (w - cw) / 2.0;
+        double y = (h - ch) / 2.0;
         if (Double.isNaN(x)) x = 0;
         if (Double.isNaN(y)) y = 0;
-        layoutInArea(menuBox, x, y, mw, mh, -1, Pos.CENTER.getHpos(), Pos.CENTER.getVpos());
+        layoutInArea(menuContainer, x, y, cw, ch, -1, Pos.CENTER.getHpos(), Pos.CENTER.getVpos());
     }
 
     private void addItem(String label, Runnable action) {

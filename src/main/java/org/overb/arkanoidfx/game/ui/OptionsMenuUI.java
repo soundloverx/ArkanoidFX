@@ -14,6 +14,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import org.overb.arkanoidfx.ConfigOptions;
 import org.overb.arkanoidfx.audio.AudioMixer;
+import org.overb.arkanoidfx.game.ResolutionManager;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,27 +37,9 @@ public class OptionsMenuUI extends StackPane {
                          BiConsumer<ConfigOptions, ConfigOptions> onApply,
                          Consumer<Void> onCancel) {
         setStyle("-fx-background-color: black;");
-        sceneProperty().addListener((obs, oldScene, scene) -> {
-            if (scene != null) {
-                minWidthProperty().bind(scene.widthProperty());
-                minHeightProperty().bind(scene.heightProperty());
-                prefWidthProperty().bind(scene.widthProperty());
-                prefHeightProperty().bind(scene.heightProperty());
-                maxWidthProperty().bind(scene.widthProperty());
-                maxHeightProperty().bind(scene.heightProperty());
-            }
-        });
-        if (getScene() != null) {
-            minWidthProperty().bind(getScene().widthProperty());
-            minHeightProperty().bind(getScene().heightProperty());
-            prefWidthProperty().bind(getScene().widthProperty());
-            prefHeightProperty().bind(getScene().heightProperty());
-            maxWidthProperty().bind(getScene().widthProperty());
-            maxHeightProperty().bind(getScene().heightProperty());
-        }
-        setPrefSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-
+        setPrefSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
+        setMaxSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
+        setMinSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         this.original = copyOf(cfg);
 
         grid.setAlignment(Pos.CENTER);
@@ -136,17 +119,16 @@ public class OptionsMenuUI extends StackPane {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        double w = getWidth();
-        double h = getHeight();
+        double w = ResolutionManager.DESIGN_RESOLUTION.getWidth();
+        double h = ResolutionManager.DESIGN_RESOLUTION.getHeight();
         grid.applyCss();
-        grid.autosize();
-        double gw = Math.max(grid.prefWidth(-1), grid.getWidth());
-        double gh = Math.max(grid.prefHeight(-1), grid.getHeight());
-        double x = (w - gw) / 2.0;
-        double y = (h - gh) / 2.0;
+        double mw = Math.max(grid.prefWidth(-1), grid.getWidth());
+        double mh = Math.max(grid.prefHeight(-1), grid.getHeight());
+        double x = (w - mw) / 2.0;
+        double y = (h - mh) / 2.0;
         if (Double.isNaN(x)) x = 0;
         if (Double.isNaN(y)) y = 0;
-        layoutInArea(grid, x, y, gw, gh, -1, Pos.CENTER.getHpos(), Pos.CENTER.getVpos());
+        layoutInArea(grid, x, y, mw, mh, -1, Pos.CENTER.getHpos(), Pos.CENTER.getVpos());
     }
 
     private Label label(String text) {

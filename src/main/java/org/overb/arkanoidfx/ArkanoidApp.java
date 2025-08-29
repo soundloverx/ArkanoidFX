@@ -9,11 +9,13 @@ import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.ImageCursor;
-import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.robot.Robot;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import lombok.Getter;
 import lombok.extern.java.Log;
 import org.overb.arkanoidfx.audio.AudioMixer;
@@ -128,17 +130,22 @@ public class ArkanoidApp extends GameApplication {
             throw new RuntimeException(e);
         }
         EventBus.subscribe(EventType.HUD_UPDATE, e -> hudManager.refresh(session));
-        EventBus.subscribe(EventType.LAST_DESTRUCTIBLE_DESTROYED, e -> levelManager.onLevelCleared());
-        EventBus.subscribe(EventType.GAME_OVER, e -> levelManager.onGameOver(() -> {
-        }));
-
-        FXGL.getGameScene().setBackgroundColor(Color.BLACK);
-        FXGL.getGameScene().getRoot().sceneProperty().addListener((obs, oldSc, newSc) -> {
-            if (newSc != null) {
-                applyCursorVisibilityToScene(newSc, wantsCursorVisible);
-                reapplyConfinementToScene(newSc);
-            }
+        EventBus.subscribe(EventType.LAST_DESTRUCTIBLE_DESTROYED, e -> {
+            setMouseVisible(true);
+            setMouseConstrained(false);
+            levelManager.onLevelCleared(() -> {
+                setMouseVisible(false);
+                setMouseConstrained(true);
+            });
         });
+        EventBus.subscribe(EventType.GAME_OVER, e -> {
+            setMouseVisible(true);
+            setMouseConstrained(false);
+            levelManager.onGameOver(() -> {
+            });
+        });
+        
+        FXGL.getGameScene().setBackgroundColor(Color.BLACK);
         showMainMenu();
         MusicService.getInstance().play("main_menu.mp3");
         FXGL.getGameTimer().runOnceAfter(() -> {
@@ -157,11 +164,6 @@ public class ArkanoidApp extends GameApplication {
             FXGL.runOnce(() -> {
                 if (optionsMenu != null && optionsMenu.isVisible()) optionsMenu.requestLayout();
                 if (mainMenu != null && mainMenu.isVisible()) mainMenu.requestLayout();
-                var sc = FXGL.getGameScene().getRoot().getScene();
-                if (sc != null) {
-                    applyCursorVisibilityToScene(sc, wantsCursorVisible);
-                    reapplyConfinementToScene(sc);
-                }
             }, javafx.util.Duration.millis(50));
         }, javafx.util.Duration.millis(1));
     }
@@ -242,9 +244,9 @@ public class ArkanoidApp extends GameApplication {
     @Override
     protected void initInput() {
         // pause
-        FXGL.onKeyDown(javafx.scene.input.KeyCode.ESCAPE, this::onPauseToggle);
+        FXGL.onKeyDown(KeyCode.ESCAPE, this::onPauseToggle);
         // release ball on click
-        FXGL.onBtnDown(javafx.scene.input.MouseButton.PRIMARY, () -> {
+        FXGL.onBtnDown(MouseButton.PRIMARY, () -> {
             var balls = FXGL.getGameWorld().getEntitiesByType(EntityType.BALL);
             for (var entity : balls) {
                 var bc = entity.getComponentOptional(BallComponent.class).orElse(null);
@@ -255,7 +257,7 @@ public class ArkanoidApp extends GameApplication {
             }
         });
         // show debug hitboxes
-        FXGL.onKeyDown(javafx.scene.input.KeyCode.F9, () -> {
+        FXGL.onKeyDown(KeyCode.F9, () -> {
             hitboxDebugShown = !hitboxDebugShown;
             if (hitboxDebugShown) {
                 FXGL.getGameWorld().getEntities().forEach(e -> {
@@ -349,33 +351,9 @@ public class ArkanoidApp extends GameApplication {
     }
 
     private void setMouseVisible(boolean visible) {
-        wantsCursorVisible = visible;
-        var root = FXGL.getGameScene().getRoot();
-        var scene = root.getScene();
-        Runnable apply = () -> {
-            var sc = root.getScene();
-            if (sc == null) return;
-            applyCursorVisibilityToScene(sc, visible);
-        };
-        if (scene == null) {
-            FXGL.runOnce(apply, javafx.util.Duration.millis(1));
-        } else {
-            apply.run();
-        }
-    }
-
-    private void applyCursorVisibilityToScene(javafx.scene.Scene sc, boolean visible) {
         if (!visible) {
-            if (transparentCursor == null) {
-                // replace mouse cursor with an invisible pixel
-                var img = new WritableImage(1, 1);
-                img.getPixelWriter().setArgb(0, 0, 0x00000000);
-                transparentCursor = new javafx.scene.ImageCursor(img, 0, 0);
-            }
-            sc.setCursor(transparentCursor);
-            FXGL.getGameScene().getRoot().setCursor(transparentCursor);
+            FXGL.getGameScene().getRoot().setCursor(Cursor.NONE);
         } else {
-            sc.setCursor(Cursor.DEFAULT);
             FXGL.getGameScene().getRoot().setCursor(Cursor.DEFAULT);
         }
     }
@@ -422,33 +400,28 @@ public class ArkanoidApp extends GameApplication {
                     try {
                         mouseRobot.mouseMove(clampedX, clampedY);
                     } finally {
-                        FXGL.runOnce(() -> mouseWarping = false, javafx.util.Duration.millis(0.5));
+                        FXGL.runOnce(() -> mouseWarping = false, Duration.millis(0.5));
                     }
                 }
             };
             Consumer<MouseEvent> confineOnEvent = evt -> {
                 if (mouseWarping) return;
-                confineByScreenPoint.accept(new javafx.geometry.Point2D(evt.getScreenX(), evt.getScreenY()));
+                confineByScreenPoint.accept(new Point2D(evt.getScreenX(), evt.getScreenY()));
                 if (mouseWarping) evt.consume();
             };
             sc.addEventFilter(MouseEvent.MOUSE_MOVED, confineOnEvent::accept);
             sc.addEventFilter(MouseEvent.MOUSE_DRAGGED, confineOnEvent::accept);
             mouseConfinePollTask = FXGL.getGameTimer().runAtInterval(() -> {
                 if (mouseWarping) return;
-                var pos = new javafx.geometry.Point2D(mouseRobot.getMouseX(), mouseRobot.getMouseY());
+                var pos = new Point2D(mouseRobot.getMouseX(), mouseRobot.getMouseY());
                 confineByScreenPoint.accept(pos);
-            }, javafx.util.Duration.millis(16));
+            }, Duration.millis(16));
         };
         if (scene == null) {
-            FXGL.runOnce(apply, javafx.util.Duration.millis(1));
+            FXGL.runOnce(apply, Duration.millis(1));
         } else {
             apply.run();
         }
-    }
-
-    private void reapplyConfinementToScene(javafx.scene.Scene sc) {
-        boolean shouldConstrain = !isAnyMenuVisible() && !paused;
-        setMouseConstrained(shouldConstrain);
     }
 
     public static void main(String[] args) {

@@ -95,7 +95,7 @@ public final class LevelManager {
         hudManager.refresh(session);
     }
 
-    public void onLevelCleared() {
+    public void onLevelCleared(Runnable afterDialog) {
         MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameWorld().getEntitiesByType(
                 EntityType.BALL, EntityType.SURPRISE, EntityType.BRICK, EntityType.WALL_SAFETY, EntityType.PADDLE
@@ -106,7 +106,10 @@ public final class LevelManager {
         });
         int nextIndex = currentLevelIndex + 1;
         if (levelOrder == null || levelOrder.isEmpty()) {
-            FXGL.getDialogService().showMessageBox("Level Cleared!", this::loadAndStart);
+            FXGL.getDialogService().showMessageBox("Level Cleared!", () -> {
+                loadAndStart();
+                if (afterDialog != null) afterDialog.run();
+            });
             return;
         }
         if (nextIndex >= levelOrder.size()) {
@@ -115,10 +118,14 @@ public final class LevelManager {
                 session.resetForNewGame();
                 currentLevelIndex = 0;
                 returnToMainMenu();
+                if (afterDialog != null) afterDialog.run();
             });
         } else {
             currentLevelIndex = nextIndex;
-            FXGL.getDialogService().showMessageBox("Level Cleared!", this::loadAndStart);
+            FXGL.getDialogService().showMessageBox("Level Cleared!", () -> {
+                loadAndStart();
+                if (afterDialog != null) afterDialog.run();
+            });
         }
     }
 

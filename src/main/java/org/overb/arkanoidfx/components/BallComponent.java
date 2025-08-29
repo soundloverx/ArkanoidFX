@@ -186,13 +186,18 @@ public class BallComponent extends Component {
                 .stream().filter(Entity::isActive).toList();
         boolean bounced = false;
         for (Entity brick : bricks) {
+            // don't collide with bricks playing their destruction animation
+            var component = brick.getComponentOptional(BrickComponent.class);
+            if (component.isEmpty() || !component.get().isDestroyed()) {
+                continue;
+            }
             Rectangle2D brickAABB = getAABB(brick);
             if (!intersects(ballAABB, brickAABB)) {
                 continue;
             }
             snapBackToContactAgainst(brickAABB, direction, Math.max(stepDistance, NUDGE));
             Axis axis = chooseBounceAxis(getAABB(entity), brickAABB);
-            brick.getComponentOptional(BrickComponent.class).ifPresent(comp -> comp.onBallHit(entity));
+            component.ifPresent(comp -> comp.onBallHit(entity));
             if (axis == Axis.HORIZONTAL) {
                 bounceHorizontal();
             } else {
