@@ -3,6 +3,7 @@ package org.overb.arkanoidfx.game;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import javafx.scene.paint.Color;
+import lombok.Setter;
 import lombok.extern.java.Log;
 import org.overb.arkanoidfx.audio.MusicService;
 import org.overb.arkanoidfx.entities.EntityRepository;
@@ -30,6 +31,7 @@ public final class LevelManager {
     private final PaddleFactory paddleFactory;
     private final BallFactory ballFactory;
     private final LevelLoader levelLoader;
+    @Setter
     private MenuReturnHandler menuReturnHandler;
 
     private List<String> levelOrder;
@@ -45,10 +47,6 @@ public final class LevelManager {
         this.paddleFactory = paddleFactory;
         this.ballFactory = ballFactory;
         this.levelLoader = levelLoader;
-    }
-
-    public void setMenuReturnHandler(MenuReturnHandler handler) {
-        this.menuReturnHandler = handler;
     }
 
     public void quitToMainMenuNoDialog() {
