@@ -10,6 +10,7 @@ public final class LevelEntity {
     public int cols;
     public int rows;
     public String music;
+    public String background;
     public List<Cell> cells = new ArrayList<>();
 
     @JsonIgnoreProperties(ignoreUnknown = true)

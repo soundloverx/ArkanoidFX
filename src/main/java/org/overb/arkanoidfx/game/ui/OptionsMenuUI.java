@@ -6,8 +6,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.image.Image;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -18,6 +18,7 @@ import org.overb.arkanoidfx.game.ResolutionManager;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -33,10 +34,8 @@ public class OptionsMenuUI extends StackPane {
     private final Slider sfxSlider = mkSlider();
     private ConfigOptions original;
 
-    public OptionsMenuUI(ConfigOptions cfg,
-                         BiConsumer<ConfigOptions, ConfigOptions> onApply,
-                         Consumer<Void> onCancel) {
-        setStyle("-fx-background-color: black;");
+    public OptionsMenuUI(ConfigOptions cfg, BiConsumer<ConfigOptions, ConfigOptions> onApply, Consumer<Void> onCancel) {
+        applyBackground("/assets/textures/bg/black-red-square-rectangle-rq-2560x1440.jpg");
         setPrefSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         setMaxSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         setMinSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
@@ -45,12 +44,12 @@ public class OptionsMenuUI extends StackPane {
         grid.setAlignment(Pos.CENTER);
         grid.setHgap(16);
         grid.setVgap(12);
-        grid.setPadding(new Insets(32,5,5,5));
+        grid.setPadding(new Insets(32, 5, 5, 5));
 
         int row = 0;
         Text title = new Text("Options");
         title.setFill(Color.WHITE);
-        title.setFont(Font.font("Verdana", FontWeight.BOLD , 50));
+        title.setFont(Font.font("Verdana", FontWeight.BOLD, 50));
         title.setEffect(new DropShadow(24, Color.LIGHTGRAY));
         grid.add(title, 0, row++, 2, 1);
 
@@ -203,5 +202,16 @@ public class OptionsMenuUI extends StackPane {
         AudioMixer.getInstance().setMasterVolume(cfg.audio.master);
         AudioMixer.getInstance().setMusicVolume(cfg.audio.music);
         AudioMixer.getInstance().setSfxVolume(cfg.audio.sfx);
+    }
+
+    private void applyBackground(String resource) {
+        try {
+            Image img = new Image(Objects.requireNonNull(getClass().getResourceAsStream(resource)));
+            BackgroundSize size = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true);
+            BackgroundImage bg = new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, size);
+            setBackground(new Background(bg));
+        } catch (Exception e) {
+            setStyle("-fx-background-color: black;");
+        }
     }
 }

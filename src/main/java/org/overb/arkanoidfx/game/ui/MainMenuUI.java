@@ -4,14 +4,15 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.image.Image;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import org.overb.arkanoidfx.game.ResolutionManager;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class MainMenuUI extends StackPane {
@@ -21,7 +22,7 @@ public class MainMenuUI extends StackPane {
     public enum Item { PLAY, EDITOR, OPTIONS, EXIT }
 
     public MainMenuUI(Consumer<Item> onAction) {
-        setStyle("-fx-background-color: black;");
+        applyBackground("/assets/textures/bg/black-red-square-rectangle-rq-2560x1440.jpg");
         setPrefSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         setMaxSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         setMinSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
@@ -91,5 +92,16 @@ public class MainMenuUI extends StackPane {
             text.setScaleY(1.0);
             text.setEffect(null);
         });
+    }
+
+    private void applyBackground(String resource) {
+        try {
+            Image img = new Image(Objects.requireNonNull(getClass().getResourceAsStream(resource)));
+            BackgroundSize size = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true);
+            BackgroundImage bg = new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, size);
+            setBackground(new Background(bg));
+        } catch (Exception e) {
+            setStyle("-fx-background-color: black;");
+        }
     }
 }

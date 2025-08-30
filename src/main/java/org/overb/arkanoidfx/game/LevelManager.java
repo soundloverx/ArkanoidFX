@@ -3,7 +3,8 @@ package org.overb.arkanoidfx.game;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
 import javafx.scene.Cursor;
-import javafx.scene.layout.StackPane;
+import javafx.scene.image.Image;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import lombok.Setter;
 import lombok.extern.java.Log;
@@ -13,8 +14,8 @@ import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.LevelEntity;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.loaders.LevelLoader;
-import org.overb.arkanoidfx.game.ui.InGameMenuUI;
 import org.overb.arkanoidfx.game.ui.HUDManager;
+import org.overb.arkanoidfx.game.ui.InGameMenuUI;
 import org.overb.arkanoidfx.game.ui.ShatteredOverlay;
 import org.overb.arkanoidfx.game.world.BallFactory;
 import org.overb.arkanoidfx.game.world.PaddleFactory;
@@ -98,13 +99,7 @@ public final class LevelManager {
     }
 
     public void onLevelCleared(Runnable afterDialog) {
-        var ballsForImpact = FXGL.getGameWorld().getEntitiesByType(EntityType.BALL);
-        javafx.geometry.Point2D impact = null;
-        if (!ballsForImpact.isEmpty()) {
-            Entity b = ballsForImpact.getFirst();
-            impact = new javafx.geometry.Point2D(b.getX() + b.getWidth() / 2.0, b.getY() + b.getHeight() / 2.0);
-        }
-        ShatteredOverlay overlay = ShatteredOverlay.showBackground(impact);
+        ShatteredOverlay overlay = ShatteredOverlay.showBackground();
         cleanupLevelEntities();
         MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameController().pauseEngine();
@@ -115,7 +110,7 @@ public final class LevelManager {
         refMenu[0] = InGameMenuUI.builder()
                 .withTitle("Level cleared")
                 .withMenuItem("Continue", () -> continueToNextLevel(afterDialog, refMenu, overlay))
-                .withMenuItem("Quit to main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
+                .withMenuItem("Main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
                 .withMenuItem("Exit", () -> exitGame(refMenu, overlay))
                 .build();
         FXGL.getGameScene().addUINode(refMenu[0]);
@@ -162,13 +157,7 @@ public final class LevelManager {
     }
 
     public void onGameOver(Runnable afterDialog) {
-        var ballsForImpact = FXGL.getGameWorld().getEntitiesByType(EntityType.BALL);
-        javafx.geometry.Point2D impact = null;
-        if (!ballsForImpact.isEmpty()) {
-            Entity b = ballsForImpact.getFirst();
-            impact = new javafx.geometry.Point2D(b.getX() + b.getWidth() / 2.0, b.getY() + b.getHeight() / 2.0);
-        }
-        ShatteredOverlay overlay = ShatteredOverlay.showBackground(impact);
+        ShatteredOverlay overlay = ShatteredOverlay.showBackground();
         cleanupLevelEntities();
         MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameController().pauseEngine();
@@ -196,9 +185,12 @@ public final class LevelManager {
         session.setCurrentLevel(currentLevelIndex + 1);
         String levelFileName = levelOrder.get(currentLevelIndex);
         FXGL.getGameScene().clearUINodes();
-        FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
+        try {
+            FXGL.getGameScene().getRoot().setBackground(null);
+            FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
+        } catch (Exception ignored) {
+        }
         session.resetLevel();
-
         LevelEntity level;
         try {
             level = levelLoader.loadLevel(levelFileName);
@@ -206,16 +198,50 @@ public final class LevelManager {
             log.severe("Failed to load level: " + levelFileName + " : " + ex.getMessage());
             throw new RuntimeException(ex);
         }
-
         currentLevel = level;
-        log.info("Loaded level: " + levelFileName + " (" + level.cols + "x" + level.rows + "), music=" + level.music);
-
+        log.info("Loaded level: " + levelFileName + " (" + level.cols + "x" + level.rows + "), music=" + level.music + ", background=" + level.background);
+        applyLevelBackground(level);
         new LevelBuilder(repository, session).buildBricks(level);
-
         hudManager.initHUD();
         hudManager.refresh(session);
-
         wallsFactory.spawnWalls();
         spawnPaddleAndBall();
+    }
+
+    private void applyLevelBackground(LevelEntity level) {
+        var root = FXGL.getGameScene().getRoot();
+        if (level == null || level.background == null || level.background.isBlank()) {
+            try {
+                root.setBackground(null);
+                FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
+            } catch (Exception ignored) {
+            }
+            return;
+        }
+        String name = level.background.trim();
+        String resource = name.startsWith("/") ? name : "/assets/textures/bg/" + name;
+        try {
+            var is = getClass().getResourceAsStream(resource);
+            if (is == null) {
+                log.warning("Background not found: " + resource);
+                try {
+                    root.setBackground(null);
+                    FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
+                } catch (Exception ignored) {
+                }
+                return;
+            }
+            Image img = new Image(is);
+            BackgroundSize size = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true);
+            BackgroundImage bg = new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, size);
+            root.setBackground(new Background(bg));
+        } catch (Exception e) {
+            log.warning("Failed to apply background '" + resource + "': " + e.getMessage());
+            try {
+                root.setBackground(null);
+                FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
+            } catch (Exception ignored) {
+            }
+        }
     }
 }

@@ -27,7 +27,7 @@ public class InGameMenuUI extends StackPane {
         setMinSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         menuBox.setAlignment(Pos.CENTER);
         menuContainer.getChildren().add(menuBox);
-        menuContainer.setStyle("-fx-border-color: rgba(0,0,0,0.5); -fx-border-width: 1; -fx-border-radius: 6; -fx-background-color: rgba(0,0,0,0.5); -fx-background-radius: 6;");
+        menuContainer.setStyle("-fx-border-color: rgba(0,0,0,0.1); -fx-border-width: 1; -fx-border-radius: 6; -fx-background-color: rgba(0,0,0,0.1); -fx-background-radius: 6;");
         getChildren().add(menuContainer);
         if (title != null && !title.isEmpty()) {
             Text titleNode = new Text(title);
@@ -123,7 +123,6 @@ public class InGameMenuUI extends StackPane {
 
         public InGameMenuUI build() {
             return new InGameMenuUI(title, items);
-            
         }
     }
 }

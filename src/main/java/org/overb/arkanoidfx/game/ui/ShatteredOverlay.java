@@ -2,28 +2,27 @@ package org.overb.arkanoidfx.game.ui;
 
 import com.almasb.fxgl.dsl.FXGL;
 import javafx.animation.*;
-import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.LinearGradient;
+import javafx.scene.paint.Stop;
 import javafx.scene.shape.Polygon;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.function.Consumer;
 
 public class ShatteredOverlay extends StackPane {
 
@@ -31,7 +30,7 @@ public class ShatteredOverlay extends StackPane {
 
     private ShatteredOverlay(Image snapshot, List<Poly> polys) {
         setPickOnBounds(true);
-        setBackground(new Background(new BackgroundFill(Color.color(0,0,0,0.0), null, null)));
+        setBackground(new Background(new BackgroundFill(Color.color(0, 0, 0, 0.0), null, null)));
         var frags = new ArrayList<Node>();
         for (Poly p : polys) {
             frags.add(createFragment(snapshot, p));
@@ -42,7 +41,7 @@ public class ShatteredOverlay extends StackPane {
         fragmentsLayer.setCacheHint(CacheHint.SPEED);
 
         Region dim = new Region();
-        dim.setBackground(new Background(new BackgroundFill(Color.color(0,0,0,0.25), null, null)));
+        dim.setBackground(new Background(new BackgroundFill(Color.color(0, 0, 0, 0.25), null, null)));
         dim.setMouseTransparent(true);
         dim.prefWidthProperty().bind(widthProperty());
         dim.prefHeightProperty().bind(heightProperty());
@@ -66,11 +65,25 @@ public class ShatteredOverlay extends StackPane {
         Polygon border = new Polygon();
         border.getPoints().setAll(clip.getPoints());
         border.setFill(Color.TRANSPARENT);
-        border.setStroke(Color.color(1,1,1,0.15));
+        border.setStroke(Color.color(1, 1, 1, 0.15));
         border.setStrokeWidth(1.0);
 
-        Group g = new Group(iv, border);
-        DropShadow ds = new DropShadow(6, Color.color(0,0,0,0.25));
+        // Subtle reflective gradient overlay to suggest rotation/reflection
+        Polygon gradShape = new Polygon();
+        gradShape.getPoints().setAll(clip.getPoints());
+        LinearGradient lg = new LinearGradient(
+                0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0.0, Color.color(1, 1, 1, 0.08)),
+                new Stop(0.35, Color.color(1, 1, 1, 0.02)),
+                new Stop(0.65, Color.color(0, 0, 0, 0.03)),
+                new Stop(1.0, Color.color(0, 0, 0, 0.10))
+        );
+        gradShape.setFill(lg);
+        gradShape.setMouseTransparent(true);
+        gradShape.setBlendMode(BlendMode.SOFT_LIGHT);
+
+        Group g = new Group(iv, gradShape, border);
+        DropShadow ds = new DropShadow(6, Color.color(0, 0, 0, 0.25));
         ds.setSpread(0.06);
         g.setEffect(ds);
         g.setCache(true);
@@ -90,34 +103,53 @@ public class ShatteredOverlay extends StackPane {
             double period = 2.0 + rnd.nextDouble() * 1.5;
 
             TranslateTransition tt = new TranslateTransition(Duration.seconds(period), n);
-            tt.setFromX(-tx); tt.setToX(tx);
-            tt.setFromY(-ty); tt.setToY(ty);
-            tt.setAutoReverse(true); tt.setCycleCount(Animation.INDEFINITE);
+            tt.setFromX(-tx);
+            tt.setToX(tx);
+            tt.setFromY(-ty);
+            tt.setToY(ty);
+            tt.setAutoReverse(true);
+            tt.setCycleCount(Animation.INDEFINITE);
 
             ScaleTransition st = new ScaleTransition(Duration.seconds(period * 0.9), n);
-            st.setFromX(sx); st.setToX(1.0 / sx);
-            st.setFromY(sy); st.setToY(1.0 / sy);
-            st.setAutoReverse(true); st.setCycleCount(Animation.INDEFINITE);
+            st.setFromX(sx);
+            st.setToX(1.0 / sx);
+            st.setFromY(sy);
+            st.setToY(1.0 / sy);
+            st.setAutoReverse(true);
+            st.setCycleCount(Animation.INDEFINITE);
 
             RotateTransition rt = new RotateTransition(Duration.seconds(period * 1.3), n);
-            rt.setFromAngle(-rot); rt.setToAngle(rot);
-            rt.setAutoReverse(true); rt.setCycleCount(Animation.INDEFINITE);
+            rt.setFromAngle(-rot);
+            rt.setToAngle(rot);
+            rt.setAutoReverse(true);
+            rt.setCycleCount(Animation.INDEFINITE);
 
             Duration delay = Duration.seconds(rnd.nextDouble() * 1.2);
-            tt.setDelay(delay); st.setDelay(delay); rt.setDelay(delay);
+            tt.setDelay(delay);
+            st.setDelay(delay);
+            rt.setDelay(delay);
 
-            tt.play(); st.play(); rt.play();
+            tt.play();
+            st.play();
+            rt.play();
         }
     }
 
-    public static ShatteredOverlay showBackground(Point2D impactPointOrNull) {
+    public static ShatteredOverlay showBackground() {
         WritableImage snap = takeSnapshot();
         double w = snap.getWidth();
         double h = snap.getHeight();
-        Point2D impact = impactPointOrNull;
-        if (impact == null) {
-            impact = new Point2D(w * 0.5, h * 0.5);
-        }
+
+//        ImageView iv = new ImageView(snap);
+//        iv.setEffect(new GaussianBlur(12));
+//        var params = new javafx.scene.SnapshotParameters();
+//        params.setFill(Color.TRANSPARENT);
+//        WritableImage blurred = iv.snapshot(params, null);
+//        BackgroundSize size = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true);
+//        BackgroundImage bg = new BackgroundImage(blurred, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, size);
+//        FXGL.getGameScene().getRoot().setBackground(new Background(bg));
+
+        Point2D impact = new Point2D(w * 0.5, h * 0.5);
         List<Poly> polys = generateRadialSlices(w, h, impact);
         if (polys.isEmpty()) {
             polys = generateImpactBiasedFragments(w, h, impact);
@@ -140,9 +172,13 @@ public class ShatteredOverlay extends StackPane {
         var params = new javafx.scene.SnapshotParameters();
         params.setFill(Color.TRANSPARENT);
         return root.snapshot(params, null);
-        }
+    }
 
-    private record Poly(double[] xs, double[] ys) { int size() { return xs.length; } }
+    private record Poly(double[] xs, double[] ys) {
+        int size() {
+            return xs.length;
+        }
+    }
 
     private static List<Poly> generateImpactBiasedFragments(double w, double h, Point2D impact) {
         int baseCols = 8, baseRows = 5;
@@ -177,7 +213,7 @@ public class ShatteredOverlay extends StackPane {
                 }
                 for (int sr = 0; sr < sub; sr++) {
                     for (int sc = 0; sc < sub; sc++) {
-                        Point2D p00 = pts[sr][sc], p10 = pts[sr][sc+1], p01 = pts[sr+1][sc], p11 = pts[sr+1][sc+1];
+                        Point2D p00 = pts[sr][sc], p10 = pts[sr][sc + 1], p01 = pts[sr + 1][sc], p11 = pts[sr + 1][sc + 1];
                         boolean diag = ((sr + sc) % 2 == 0);
                         if (diag) {
                             out.add(polyOf(p00, p10, p11));
@@ -236,8 +272,8 @@ public class ShatteredOverlay extends StackPane {
                 Point2D p3 = new Point2D(cx + rPrev * Math.cos(a1), cy + rPrev * Math.sin(a1));
 
                 double j = 4.0;
-                p1 = p1.add((rnd.nextDouble()-0.5)*j, (rnd.nextDouble()-0.5)*j);
-                p2 = p2.add((rnd.nextDouble()-0.5)*j, (rnd.nextDouble()-0.5)*j);
+                p1 = p1.add((rnd.nextDouble() - 0.5) * j, (rnd.nextDouble() - 0.5) * j);
+                p2 = p2.add((rnd.nextDouble() - 0.5) * j, (rnd.nextDouble() - 0.5) * j);
                 if (!within(p1, w, h) && !within(p2, w, h) && !within(p0, w, h) && !within(p3, w, h)) {
                     rPrev = r1;
                     continue;
