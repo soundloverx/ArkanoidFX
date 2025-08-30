@@ -65,20 +65,17 @@ public final class BallFactory {
                 .type(EntityType.BALL)
                 .at(x, y)
                 .view(Objects.requireNonNullElseGet(ballTexture, () -> new Rectangle(ballWidth, ballHeight, Color.ORANGE)))
-                .bbox(new HitBox(BoundingShape.box(ballWidth, ballHeight)))
+                .bbox(new HitBox(BoundingShape.circle(Math.min(ballWidth, ballHeight) / 2.0)))
                 .with(new CollidableComponent(true))
                 .buildAndAttach();
     }
 
     private void attachBallComponents(Entity ball, Texture ballTexture, Entity paddle) {
-        // Core behavior
         BallComponent ballComponent = new BallComponent(paddle);
         if (defaultBallDefinition != null && defaultBallDefinition.sounds != null) {
             ballComponent.setSounds(defaultBallDefinition.sounds.hitWall, defaultBallDefinition.sounds.hitPaddle, defaultBallDefinition.sounds.lost);
         }
         ball.addComponent(ballComponent);
-
-        // Optional animation
         if (ballTexture != null && defaultBallDefinition != null && defaultBallDefinition.visual != null) {
             int frames = Math.max(1, defaultBallDefinition.visual.frames);
             double frameDuration = defaultBallDefinition.visual.frameDuration > 0 ? defaultBallDefinition.visual.frameDuration : 0.0;

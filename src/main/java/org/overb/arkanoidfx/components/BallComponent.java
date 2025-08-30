@@ -106,14 +106,15 @@ public class BallComponent extends Component {
     }
 
     private void snapBackToContactAgainst(Rectangle2D otherAABB, Point2D dir, double maxBack) {
-        Rectangle2D startAABB = getAABB(entity);
-        if (!intersects(startAABB, otherAABB)) {
+        Point2D c0 = getBallCenter(entity);
+        double r0 = getBallRadius(entity);
+        if (!intersectsCircleRect(c0, r0, otherAABB)) {
             return;
         }
         double low = 0.0;
         double high = maxBack;
         entity.translate(dir.multiply(-high));
-        boolean separated = !intersects(getAABB(entity), otherAABB);
+        boolean separated = !intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), otherAABB);
         if (!separated) {
             entity.translate(dir.multiply(high));
             return;
@@ -121,8 +122,8 @@ public class BallComponent extends Component {
         for (int k = 0; k < CONTACT_SEARCH_ITERS; k++) {
             double mid = (low + high) * 0.5;
             double forward = high - mid;
-            entity.translate(dir.multiply(forward)); // move forward
-            boolean nowOverlapping = intersects(getAABB(entity), otherAABB);
+            entity.translate(dir.multiply(forward));
+            boolean nowOverlapping = intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), otherAABB);
             if (nowOverlapping) {
                 entity.translate(dir.multiply(-forward));
                 low = mid;
@@ -136,12 +137,13 @@ public class BallComponent extends Component {
         if (paddle == null || !paddle.isActive()) {
             return false;
         }
-        Rectangle2D ballAABB = getAABB(entity);
-        Rectangle2D padAABB = getAABB(paddle);
-        if (!intersects(ballAABB, padAABB)) {
+        if (velocity.getY() < 0) {
             return false;
         }
-        // place the ball at the contact point first
+        Rectangle2D padAABB = getAABB(paddle);
+        if (!intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), padAABB)) {
+            return false;
+        }
         snapBackToContactAgainst(padAABB, direction, Math.max(stepDistance, NUDGE));
         reflectFromPaddle(paddle);
         playPaddleHit();
@@ -150,16 +152,19 @@ public class BallComponent extends Component {
     }
 
     private boolean checkAndResolveWallOverlap(Point2D direction, double stepDistance) {
-        Rectangle2D ballAABB = getAABB(entity);
         var world = FXGL.getGameWorld();
         var walls = world.getEntitiesByType(EntityType.WALL_LEFT, EntityType.WALL_RIGHT, EntityType.WALL_TOP, EntityType.WALL_BOTTOM_SENSOR, EntityType.WALL_SAFETY);
         boolean bounced = false;
         for (Entity wall : walls) {
-            Rectangle2D wallAABB = getAABB(wall);
-            if (!intersects(ballAABB, wallAABB)) {
+            EntityType type = (EntityType) wall.getTypeComponent().getValue();
+            // Disable safety wall collisions while moving upwards
+            if (type == EntityType.WALL_SAFETY && velocity.getY() < 0) {
                 continue;
             }
-            EntityType type = (EntityType) wall.getTypeComponent().getValue();
+            Rectangle2D wallAABB = getAABB(wall);
+            if (!intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), wallAABB)) {
+                continue;
+            }
             if (type == EntityType.WALL_BOTTOM_SENSOR) {
                 return true;
             }
@@ -173,14 +178,12 @@ public class BallComponent extends Component {
             }
             enforceMinVerticalComponent();
             bounced = true;
-            ballAABB = getAABB(entity);
         }
         return bounced;
     }
 
 
     private boolean checkAndResolveBrickOverlap(Point2D direction, double stepDistance) {
-        Rectangle2D ballAABB = getAABB(entity);
         var bricks = FXGL.getGameWorld()
                 .getEntitiesByType(EntityType.BRICK)
                 .stream().filter(Entity::isActive).toList();
@@ -188,15 +191,16 @@ public class BallComponent extends Component {
         for (Entity brick : bricks) {
             // don't collide with bricks playing their destruction animation
             var component = brick.getComponentOptional(BrickComponent.class);
-            if (component.isEmpty() || !component.get().isDestroyed()) {
+            // Skip bricks that are already destroyed or missing component
+            if (component.isEmpty() || component.get().isDestroyed()) {
                 continue;
             }
             Rectangle2D brickAABB = getAABB(brick);
-            if (!intersects(ballAABB, brickAABB)) {
+            if (!intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), brickAABB)) {
                 continue;
             }
             snapBackToContactAgainst(brickAABB, direction, Math.max(stepDistance, NUDGE));
-            Axis axis = chooseBounceAxis(getAABB(entity), brickAABB);
+            Axis axis = chooseBounceAxisCircleRect(getBallCenter(entity), brickAABB);
             component.ifPresent(comp -> comp.onBallHit(entity));
             if (axis == Axis.HORIZONTAL) {
                 bounceHorizontal();
@@ -205,22 +209,8 @@ public class BallComponent extends Component {
             }
             enforceMinVerticalComponent();
             bounced = true;
-            ballAABB = getAABB(entity);
         }
         return bounced;
-    }
-
-    private Axis chooseBounceAxis(Rectangle2D ball, Rectangle2D box) {
-        double overlapLeft = ball.getMaxX() - box.getMinX();
-        double overlapRight = box.getMaxX() - ball.getMinX();
-        double overlapTop = ball.getMaxY() - box.getMinY();
-        double overlapBottom = box.getMaxY() - ball.getMinY();
-        double minXOverlap = Math.min(overlapLeft, overlapRight);
-        double minYOverlap = Math.min(overlapTop, overlapBottom);
-        if (minXOverlap < minYOverlap) {
-            return Axis.HORIZONTAL;
-        }
-        return Axis.VERTICAL;
     }
 
     private void enforceMinVerticalComponent() {
@@ -254,11 +244,32 @@ public class BallComponent extends Component {
         return new Rectangle2D(x, y, w, h);
     }
 
-    private static boolean intersects(Rectangle2D a, Rectangle2D b) {
-        return a.getMaxX() > b.getMinX() &&
-                a.getMinX() < b.getMaxX() &&
-                a.getMaxY() > b.getMinY() &&
-                a.getMinY() < b.getMaxY();
+    private static Point2D getBallCenter(Entity e) {
+        return new Point2D(e.getX() + e.getWidth() / 2.0, e.getY() + e.getHeight() / 2.0);
+    }
+
+    private static double getBallRadius(Entity e) {
+        return Math.min(e.getWidth(), e.getHeight()) / 2.0;
+    }
+
+    private static boolean intersectsCircleRect(Point2D center, double radius, Rectangle2D rect) {
+        double closestX = Math.max(rect.getMinX(), Math.min(center.getX(), rect.getMaxX()));
+        double closestY = Math.max(rect.getMinY(), Math.min(center.getY(), rect.getMaxY()));
+        double dx = center.getX() - closestX;
+        double dy = center.getY() - closestY;
+        return dx * dx + dy * dy <= radius * radius;
+    }
+
+    private static Axis chooseBounceAxisCircleRect(Point2D c, Rectangle2D rect) {
+        double closestX = Math.max(rect.getMinX(), Math.min(c.getX(), rect.getMaxX()));
+        double closestY = Math.max(rect.getMinY(), Math.min(c.getY(), rect.getMaxY()));
+        double dx = c.getX() - closestX;
+        double dy = c.getY() - closestY;
+        if (Math.abs(dx) > Math.abs(dy)) {
+            return Axis.HORIZONTAL;
+        } else {
+            return Axis.VERTICAL;
+        }
     }
 
     public void launch() {
