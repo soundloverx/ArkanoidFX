@@ -2,15 +2,20 @@ package org.overb.arkanoidfx.game;
 
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import javafx.scene.Cursor;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import lombok.Setter;
 import lombok.extern.java.Log;
+import org.overb.arkanoidfx.ArkanoidApp;
 import org.overb.arkanoidfx.audio.MusicService;
 import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.LevelEntity;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.loaders.LevelLoader;
+import org.overb.arkanoidfx.game.ui.InGameMenuUI;
 import org.overb.arkanoidfx.game.ui.HUDManager;
+import org.overb.arkanoidfx.game.ui.ShatteredOverlay;
 import org.overb.arkanoidfx.game.world.BallFactory;
 import org.overb.arkanoidfx.game.world.PaddleFactory;
 import org.overb.arkanoidfx.game.world.WallsFactory;
@@ -50,7 +55,6 @@ public final class LevelManager {
     }
 
     public void quitToMainMenuNoDialog() {
-        // Clean up entities and session, then go to main menu without showing any dialog
         MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameWorld().getEntitiesByType(
                 EntityType.BALL, EntityType.SURPRISE, EntityType.BRICK, EntityType.WALL_SAFETY, EntityType.PADDLE
@@ -65,10 +69,8 @@ public final class LevelManager {
     }
 
     private void returnToMainMenu() {
-        // clear any UI/HUD and switch background to black
         FXGL.getGameScene().clearUINodes();
         FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
-        // stop any level music and start main menu music
         MusicService.getInstance().stopCurrentMusic();
         MusicService.getInstance().play("main_menu.mp3");
         if (menuReturnHandler != null) {
@@ -96,55 +98,97 @@ public final class LevelManager {
     }
 
     public void onLevelCleared(Runnable afterDialog) {
+        var ballsForImpact = FXGL.getGameWorld().getEntitiesByType(EntityType.BALL);
+        javafx.geometry.Point2D impact = null;
+        if (!ballsForImpact.isEmpty()) {
+            Entity b = ballsForImpact.getFirst();
+            impact = new javafx.geometry.Point2D(b.getX() + b.getWidth() / 2.0, b.getY() + b.getHeight() / 2.0);
+        }
+        ShatteredOverlay overlay = ShatteredOverlay.showBackground(impact);
+        cleanupLevelEntities();
         MusicService.getInstance().stopCurrentMusic();
-        FXGL.getGameWorld().getEntitiesByType(
-                EntityType.BALL, EntityType.SURPRISE, EntityType.BRICK, EntityType.WALL_SAFETY, EntityType.PADDLE
-        ).forEach(e -> {
-            if (e.isActive()) {
-                e.removeFromWorld();
-            }
-        });
+        FXGL.getGameController().pauseEngine();
+        FXGL.getGameScene().getRoot().setCursor(Cursor.DEFAULT);
+        ArkanoidApp.setEndStateMenuVisible(true);
+
+        StackPane[] refMenu = new StackPane[1];
+        refMenu[0] = InGameMenuUI.builder()
+                .withTitle("Level cleared")
+                .withMenuItem("Continue", () -> continueToNextLevel(afterDialog, refMenu, overlay))
+                .withMenuItem("Quit to main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
+                .withMenuItem("Exit", () -> exitGame(refMenu, overlay))
+                .build();
+        FXGL.getGameScene().addUINode(refMenu[0]);
+    }
+
+    private static void exitGame(StackPane[] refMenu, ShatteredOverlay overlay) {
+        FXGL.getGameScene().removeUINode(refMenu[0]);
+        overlay.dismiss();
+        ArkanoidApp.setEndStateMenuVisible(false);
+        FXGL.getGameController().exit();
+    }
+
+    private void quitToMainMenu(Runnable afterDialog, StackPane[] refMenu, ShatteredOverlay overlay) {
+        FXGL.getGameScene().removeUINode(refMenu[0]);
+        overlay.dismiss();
+        FXGL.getGameController().resumeEngine();
+        ArkanoidApp.setEndStateMenuVisible(false);
+        FXGL.getGameScene().getRoot().setCursor(Cursor.DEFAULT);
+        quitToMainMenuNoDialog();
+        if (afterDialog != null) afterDialog.run();
+    }
+
+    private void continueToNextLevel(Runnable afterDialog, StackPane[] refMenu, ShatteredOverlay overlay) {
+        FXGL.getGameScene().removeUINode(refMenu[0]);
+        overlay.dismiss();
         int nextIndex = currentLevelIndex + 1;
         if (levelOrder == null || levelOrder.isEmpty()) {
-            FXGL.getDialogService().showMessageBox("Level Cleared!", () -> {
-                loadAndStart();
-                if (afterDialog != null) afterDialog.run();
-            });
+            loadAndStart();
+        } else if (nextIndex >= levelOrder.size()) {
+            session.resetForNewGame();
+            currentLevelIndex = 0;
+            ArkanoidApp.setEndStateMenuVisible(false);
+            returnToMainMenu();
+            if (afterDialog != null) afterDialog.run();
             return;
-        }
-        if (nextIndex >= levelOrder.size()) {
-            // Last level finished: go back to main menu after dialog
-            FXGL.getDialogService().showMessageBox("Victory! Score: " + session.getScoreRounded(), () -> {
-                session.resetForNewGame();
-                currentLevelIndex = 0;
-                returnToMainMenu();
-                if (afterDialog != null) afterDialog.run();
-            });
         } else {
             currentLevelIndex = nextIndex;
-            FXGL.getDialogService().showMessageBox("Level Cleared!", () -> {
-                loadAndStart();
-                if (afterDialog != null) afterDialog.run();
-            });
+            loadAndStart();
         }
+        FXGL.getGameController().resumeEngine();
+        ArkanoidApp.setEndStateMenuVisible(false);
+        FXGL.getGameScene().getRoot().setCursor(Cursor.NONE);
+        if (afterDialog != null) afterDialog.run();
     }
 
     public void onGameOver(Runnable afterDialog) {
+        var ballsForImpact = FXGL.getGameWorld().getEntitiesByType(EntityType.BALL);
+        javafx.geometry.Point2D impact = null;
+        if (!ballsForImpact.isEmpty()) {
+            Entity b = ballsForImpact.getFirst();
+            impact = new javafx.geometry.Point2D(b.getX() + b.getWidth() / 2.0, b.getY() + b.getHeight() / 2.0);
+        }
+        ShatteredOverlay overlay = ShatteredOverlay.showBackground(impact);
+        cleanupLevelEntities();
         MusicService.getInstance().stopCurrentMusic();
+        FXGL.getGameController().pauseEngine();
+        FXGL.getGameScene().getRoot().setCursor(Cursor.DEFAULT);
+        ArkanoidApp.setEndStateMenuVisible(true);
+
+        StackPane[] refMenu = new StackPane[1];
+        refMenu[0] = InGameMenuUI.builder()
+                .withTitle("Game over")
+                .withMenuItem("Main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
+                .withMenuItem("Exit", () -> exitGame(refMenu, overlay))
+                .build();
+        FXGL.getGameScene().addUINode(refMenu[0]);
+    }
+
+    private void cleanupLevelEntities() {
         FXGL.getGameWorld().getEntitiesByType(
                 EntityType.BALL, EntityType.SURPRISE, EntityType.BRICK, EntityType.WALL_SAFETY, EntityType.PADDLE
         ).forEach(e -> {
-            if (e.isActive()) {
-                e.removeFromWorld();
-            }
-        });
-        FXGL.getDialogService().showMessageBox("Game Over! Score: " + session.getScoreRounded(), () -> {
-            session.resetForNewGame();
-            currentLevelIndex = 0;
-            returnToMainMenu();
-            if (afterDialog != null) {
-                afterDialog.run();
-            }
+            if (e.isActive()) e.removeFromWorld();
         });
     }
 

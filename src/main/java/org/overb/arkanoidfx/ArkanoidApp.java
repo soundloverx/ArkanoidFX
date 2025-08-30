@@ -40,7 +40,7 @@ import org.overb.arkanoidfx.game.loaders.LevelLoader;
 import org.overb.arkanoidfx.game.ui.HUDManager;
 import org.overb.arkanoidfx.game.ui.MainMenuUI;
 import org.overb.arkanoidfx.game.ui.OptionsMenuUI;
-import org.overb.arkanoidfx.game.ui.PauseMenuUI;
+import org.overb.arkanoidfx.game.ui.InGameMenuUI;
 import org.overb.arkanoidfx.game.world.BallFactory;
 import org.overb.arkanoidfx.game.world.PaddleFactory;
 import org.overb.arkanoidfx.game.world.WallsFactory;
@@ -50,10 +50,13 @@ import java.util.function.Consumer;
 
 @Log
 public class ArkanoidApp extends GameApplication {
+    private static volatile boolean endStateMenuVisible = false;
+    public static void setEndStateMenuVisible(boolean value) { endStateMenuVisible = value; }
+    public static boolean isEndStateMenuVisible() { return endStateMenuVisible; }
 
     private MainMenuUI mainMenu;
     private OptionsMenuUI optionsMenu;
-    private PauseMenuUI pauseMenu;
+    private InGameMenuUI pauseMenu;
     private boolean paused = false;
 
     @Getter
@@ -292,6 +295,9 @@ public class ArkanoidApp extends GameApplication {
     }
 
     private void onPauseToggle() {
+            if (ArkanoidApp.isEndStateMenuVisible()) {
+                return;
+            }
         if (isAnyMenuVisible()) {
             return;
         }
@@ -315,13 +321,12 @@ public class ArkanoidApp extends GameApplication {
         setMouseVisible(true);
         setMouseConstrained(false);
         if (pauseMenu == null) {
-            pauseMenu = new PauseMenuUI(item -> {
-                switch (item) {
-                    case RESUME -> resumeFromPause();
-                    case QUIT_TO_MAIN -> quitToMainFromPause();
-                    case EXIT -> FXGL.getGameController().exit();
-                }
-            });
+            pauseMenu = InGameMenuUI.builder()
+                    .withTitle("Paused")
+                    .withMenuItem("Resume", this::resumeFromPause)
+                    .withMenuItem("Quit to main menu", this::quitToMainFromPause)
+                    .withMenuItem("Exit", () -> FXGL.getGameController().exit())
+                    .build();
         }
         FXGL.getGameScene().addUINodes(pauseMenu);
     }
