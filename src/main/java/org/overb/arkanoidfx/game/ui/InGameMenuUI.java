@@ -2,7 +2,6 @@ package org.overb.arkanoidfx.game.ui;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.StackPane;
@@ -11,19 +10,17 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.stage.Stage;
 import org.overb.arkanoidfx.game.ResolutionManager;
 
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.List;
 
-public class PauseMenuUI extends StackPane {
+public class InGameMenuUI extends StackPane {
 
     private final VBox menuBox = new VBox(16);
     private final StackPane menuContainer = new StackPane();
 
-    public enum Item { RESUME, QUIT_TO_MAIN, EXIT }
-
-    public PauseMenuUI(Consumer<Item> onAction) {
+    private InGameMenuUI(String title, List<MenuItem> items) {
         setStyle("-fx-background-color: transparent;");
         setPrefSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         setMaxSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
@@ -32,22 +29,25 @@ public class PauseMenuUI extends StackPane {
         menuContainer.getChildren().add(menuBox);
         menuContainer.setStyle("-fx-border-color: rgba(0,0,0,0.5); -fx-border-width: 1; -fx-border-radius: 6; -fx-background-color: rgba(0,0,0,0.5); -fx-background-radius: 6;");
         getChildren().add(menuContainer);
-
-        Text title = new Text("Paused");
-        title.setFill(Color.WHITE);
-        title.setFont(Font.font("Verdana", FontWeight.BOLD , 50));
-        title.setEffect(new DropShadow(24, Color.DARKGRAY));
-        var titleWrapper = new StackPane(title);
-        titleWrapper.setPadding(new Insets(10, 10, 30, 10));
-        menuBox.getChildren().add(titleWrapper);
-
-        addItem("Resume", () -> onAction.accept(Item.RESUME));
-        addItem("Quit to main menu", () -> onAction.accept(Item.QUIT_TO_MAIN));
-        addItem("Exit", () -> onAction.accept(Item.EXIT));
+        if (title != null && !title.isEmpty()) {
+            Text titleNode = new Text(title);
+            titleNode.setFill(Color.WHITE);
+            titleNode.setFont(Font.font("Verdana", FontWeight.BOLD, 50));
+            titleNode.setEffect(new DropShadow(24, Color.DARKGRAY));
+            var titleWrapper = new StackPane(titleNode);
+            titleWrapper.setPadding(new Insets(10, 10, 30, 10));
+            menuBox.getChildren().add(titleWrapper);
+        }
+        for (MenuItem mi : items) {
+            addItem(mi.label, mi.action);
+        }
         widthProperty().addListener((o, ov, nv) -> requestLayout());
         heightProperty().addListener((o, ov, nv) -> requestLayout());
         if (!menuBox.getChildren().isEmpty()) {
-            menuBox.getChildren().get(1).requestFocus();
+            int index = (title != null && !title.isEmpty()) ? 1 : 0;
+            if (index < menuBox.getChildren().size()) {
+                menuBox.getChildren().get(index).requestFocus();
+            }
         }
     }
 
@@ -59,7 +59,6 @@ public class PauseMenuUI extends StackPane {
         menuBox.applyCss();
         double mw = Math.max(menuBox.prefWidth(-1), menuBox.getWidth());
         double mh = Math.max(menuBox.prefHeight(-1), menuBox.getHeight());
-        // add some padding for the border/background visuals
         double pad = 16;
         double cw = mw + pad * 2;
         double ch = mh + pad * 2;
@@ -98,5 +97,33 @@ public class PauseMenuUI extends StackPane {
             text.setScaleY(1.0);
             text.setEffect(null);
         });
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    private record MenuItem(String label, Runnable action) {}
+
+    public static class Builder {
+        private String title = "";
+        private final List<MenuItem> items = new ArrayList<>();
+
+        public Builder withTitle(String title) {
+            this.title = title == null ? "" : title;
+            return this;
+        }
+
+        public Builder withMenuItem(String text, Runnable action) {
+            if (text == null || text.isBlank()) return this;
+            if (action == null) action = () -> {};
+            items.add(new MenuItem(text, action));
+            return this;
+        }
+
+        public InGameMenuUI build() {
+            return new InGameMenuUI(title, items);
+            
+        }
     }
 }
