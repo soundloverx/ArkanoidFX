@@ -6,6 +6,7 @@ import com.almasb.fxgl.entity.component.Component;
 import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.texture.Texture;
 import com.almasb.fxgl.time.TimerAction;
+import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.util.Duration;
 import lombok.Getter;
@@ -91,9 +92,6 @@ public class BrickComponent extends Component {
         double baseSpeed = BallComponent.getBaseSpeed();
         session.onBrickDestroyed(brickEntity.points, maxSpeed, baseSpeed);
         EventBus.publish(GameEvent.of(EventType.HUD_UPDATE));
-        if (session.getDestructibleBricksLeft() == 0) {
-            EventBus.publish(GameEvent.of(EventType.LAST_DESTRUCTIBLE_DESTROYED));
-        }
         SfxBus.getInstance().play(brickEntity.destroySound);
         spawnSurpriseIfAny(entity.getX(), entity.getY());
         if (brickEntity.breakAnim != null) {
@@ -111,6 +109,9 @@ public class BrickComponent extends Component {
             if (entity != null && entity.isActive()) {
                 entity.removeFromWorld();
             }
+        }
+        if (session.getDestructibleBricksLeft() == 0) {
+            Platform.runLater(() -> EventBus.publish(GameEvent.of(EventType.LEVEL_FINISHED)));
         }
     }
 

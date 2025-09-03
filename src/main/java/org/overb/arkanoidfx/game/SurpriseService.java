@@ -24,7 +24,7 @@ public final class SurpriseService {
     public void applyMultiball() {
         // Snapshot current balls to avoid chain-spawning from newly created balls within the same frame
         List<Entity> balls = new ArrayList<>(FXGL.getGameWorld().getEntitiesByType(EntityType.BALL));
-        if (balls.isEmpty()) {
+        if (balls.isEmpty() || balls.size() >= 30) {
             return;
         }
 

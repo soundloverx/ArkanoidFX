@@ -10,11 +10,13 @@ import lombok.Setter;
 import org.overb.arkanoidfx.audio.SfxBus;
 import org.overb.arkanoidfx.enums.Axis;
 import org.overb.arkanoidfx.enums.EntityType;
+import org.overb.arkanoidfx.enums.EventType;
+import org.overb.arkanoidfx.game.core.EventBus;
+import org.overb.arkanoidfx.game.core.GameEvent;
 
 public class BallComponent extends Component {
 
-    private static final double BASE_DESIGN_SPEED = 700.0; // pixels/sec at 1080p
-    private static double BASE_SPEED = BASE_DESIGN_SPEED;
+    private static final double BASE_SPEED = 700.0; // pixels/sec at 1080p
     private static final double MIN_SPEED_MULTIPLIER = 0.5;
     private static final double MAX_SPEED_MULTIPLIER = 2.4;
     private static final double STEP_FRACTION_OF_BALL = 0.15;
@@ -74,145 +76,81 @@ public class BallComponent extends Component {
     }
 
     private void moveWithSubsteps(double timePerFrame) {
-        double totalDistance = velocity.magnitude() * timePerFrame;
-        if (totalDistance <= 0) return;
-
+        double speed = velocity.magnitude();
+        if (speed <= 0) return;
         double ballSize = Math.max(entity.getWidth(), entity.getHeight());
         double maxStep = Math.max(1.0, ballSize * STEP_FRACTION_OF_BALL);
-        int steps = (int) Math.ceil(totalDistance / maxStep);
+        int steps = (int) Math.ceil((speed * timePerFrame) / maxStep);
         steps = Math.min(steps, MAX_SUBSTEPS_PER_FRAME);
+        double remainingFrameTime = timePerFrame;
+        for (int i = 0; i < steps && remainingFrameTime > 0; i++) {
+            // slice time per substep to not exceed the frame
+            double sliceTime = Math.min(remainingFrameTime, maxStep / Math.max(1e-6, speed));
+            remainingFrameTime -= sliceTime;
+            // there may be multiple collisions within this slice if the ball is fast
+            double timeLeft = sliceTime;
+            for (int guard = 0; guard < 8 && timeLeft > 1e-6; guard++) {
+                Point2D v = velocity;
+                double vLen = v.magnitude();
+                if (vLen < 1e-6) {
+                    break;
+                }
+                Point2D dir = new Point2D(v.getX() / vLen, v.getY() / vLen);
+                double maxTravel = vLen * timeLeft;
 
-        Point2D direction = normalized(velocity);
-        double stepDistance = totalDistance / steps;
-
-        for (int i = 0; i < steps; i++) {
-            entity.translate(direction.multiply(stepDistance));
-            // paddle
-            if (checkAndResolvePaddleOverlap(direction, stepDistance)) {
-                direction = normalized(velocity);
-                entity.translate(direction.multiply(-NUDGE));
-            }
-            // walls
-            if (checkAndResolveWallOverlap(direction, stepDistance)) {
-                direction = normalized(velocity);
-                entity.translate(direction.multiply(-NUDGE));
-            }
-            // bricks
-            if (checkAndResolveBrickOverlap(direction, stepDistance)) {
-                direction = normalized(velocity);
-                // Instead of nudging forward (which may push us into an adjacent brick),
-                // nudge slightly opposite to the new velocity to stay just outside the contact.
-                entity.translate(direction.multiply(-NUDGE));
+                // find the earliest time of impact
+                TOI best = findEarliestTOI(dir, maxTravel);
+                if (best == null || best.distance > maxTravel) {
+                    // no hit this time, continue
+                    entity.translate(dir.multiply(maxTravel));
+                    break;
+                }
+                // advance to impact
+                double travel = Math.max(0, best.distance - 1e-4); // tiny epsilon to avoid initial overlap
+                if (travel > 0) {
+                    entity.translate(dir.multiply(travel));
+                }
+                switch (best.target) {
+                    case WALL_LEFT:
+                    case WALL_RIGHT:
+                        bounceHorizontal();
+                        playWallHit();
+                        break;
+                    case WALL_TOP:
+                    case WALL_SAFETY:
+                        bounceVertical();
+                        playWallHit();
+                        break;
+                    case WALL_BOTTOM_SENSOR:
+                        entity.removeFromWorld();
+                        if (FXGL.getGameWorld().getEntitiesByType(EntityType.BALL).isEmpty()) {
+                            playLost();
+                            EventBus.publish(GameEvent.of(EventType.BALL_LOST));
+                        }
+                        return;
+                    case PADDLE:
+                        reflectFromPaddle(paddle);
+                        playPaddleHit();
+                        break;
+                    case BRICK:
+                        best.brickHitCallbackIfAny();
+                        Axis ax = chooseBounceAxisCircleRect(getBallCenter(entity), best.targetBox);
+                        if (ax == Axis.HORIZONTAL) {
+                            bounceHorizontal();
+                        } else {
+                            bounceVertical();
+                        }
+                        break;
+                }
+                enforceMinVerticalComponent();
+                // nudge to avoid recollision with same brick next frame
+                Point2D newDir = normalized(velocity);
+                entity.translate(newDir.multiply(NUDGE));
+                // consume the time associated with the distance at the previous ball velocity
+                double usedTime = best.distance / vLen;
+                timeLeft = Math.max(0, timeLeft - usedTime);
             }
         }
-    }
-
-    private void snapBackToContactAgainst(Rectangle2D otherAABB, Point2D dir, double maxBack) {
-        Point2D c0 = getBallCenter(entity);
-        double r0 = getBallRadius(entity);
-        if (!intersectsCircleRect(c0, r0, otherAABB)) {
-            return;
-        }
-        double low = 0.0;
-        double high = maxBack;
-        entity.translate(dir.multiply(-high));
-        boolean separated = !intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), otherAABB);
-        if (!separated) {
-            entity.translate(dir.multiply(high));
-            return;
-        }
-        for (int k = 0; k < CONTACT_SEARCH_ITERS; k++) {
-            double mid = (low + high) * 0.5;
-            double forward = high - mid;
-            entity.translate(dir.multiply(forward));
-            boolean nowOverlapping = intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), otherAABB);
-            if (nowOverlapping) {
-                entity.translate(dir.multiply(-forward));
-                low = mid;
-            } else {
-                high = mid;
-            }
-        }
-    }
-
-    private boolean checkAndResolvePaddleOverlap(Point2D direction, double stepDistance) {
-        if (paddle == null || !paddle.isActive()) {
-            return false;
-        }
-        if (velocity.getY() < 0) {
-            return false;
-        }
-        Rectangle2D padAABB = getAABB(paddle);
-        if (!intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), padAABB)) {
-            return false;
-        }
-        snapBackToContactAgainst(padAABB, direction, Math.max(stepDistance, NUDGE));
-        reflectFromPaddle(paddle);
-        playPaddleHit();
-        enforceMinVerticalComponent();
-        return true;
-    }
-
-    private boolean checkAndResolveWallOverlap(Point2D direction, double stepDistance) {
-        var world = FXGL.getGameWorld();
-        var walls = world.getEntitiesByType(EntityType.WALL_LEFT, EntityType.WALL_RIGHT, EntityType.WALL_TOP, EntityType.WALL_BOTTOM_SENSOR, EntityType.WALL_SAFETY);
-        boolean bounced = false;
-        for (Entity wall : walls) {
-            EntityType type = (EntityType) wall.getTypeComponent().getValue();
-            // Disable safety wall collisions while moving upwards
-            if (type == EntityType.WALL_SAFETY && velocity.getY() < 0) {
-                continue;
-            }
-            Rectangle2D wallAABB = getAABB(wall);
-            if (!intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), wallAABB)) {
-                continue;
-            }
-            if (type == EntityType.WALL_BOTTOM_SENSOR) {
-                return true;
-            }
-            snapBackToContactAgainst(wallAABB, direction, Math.max(stepDistance, NUDGE));
-            if (type == EntityType.WALL_LEFT || type == EntityType.WALL_RIGHT) {
-                bounceHorizontal();
-                playWallHit();
-            } else {
-                bounceVertical();
-                playWallHit();
-            }
-            enforceMinVerticalComponent();
-            bounced = true;
-        }
-        return bounced;
-    }
-
-
-    private boolean checkAndResolveBrickOverlap(Point2D direction, double stepDistance) {
-        var bricks = FXGL.getGameWorld()
-                .getEntitiesByType(EntityType.BRICK)
-                .stream().filter(Entity::isActive).toList();
-        boolean bounced = false;
-        for (Entity brick : bricks) {
-            // don't collide with bricks playing their destruction animation
-            var component = brick.getComponentOptional(BrickComponent.class);
-            // Skip bricks that are already destroyed or missing component
-            if (component.isEmpty() || component.get().isDestroyed()) {
-                continue;
-            }
-            Rectangle2D brickAABB = getAABB(brick);
-            if (!intersectsCircleRect(getBallCenter(entity), getBallRadius(entity), brickAABB)) {
-                continue;
-            }
-            snapBackToContactAgainst(brickAABB, direction, Math.max(stepDistance, NUDGE));
-            Axis axis = chooseBounceAxisCircleRect(getBallCenter(entity), brickAABB);
-            component.ifPresent(comp -> comp.onBallHit(entity));
-            if (axis == Axis.HORIZONTAL) {
-                bounceHorizontal();
-            } else {
-                bounceVertical();
-            }
-            enforceMinVerticalComponent();
-            bounced = true;
-        }
-        return bounced;
     }
 
     private void enforceMinVerticalComponent() {
@@ -254,14 +192,6 @@ public class BallComponent extends Component {
         return Math.min(e.getWidth(), e.getHeight()) / 2.0;
     }
 
-    private static boolean intersectsCircleRect(Point2D center, double radius, Rectangle2D rect) {
-        double closestX = Math.max(rect.getMinX(), Math.min(center.getX(), rect.getMaxX()));
-        double closestY = Math.max(rect.getMinY(), Math.min(center.getY(), rect.getMaxY()));
-        double dx = center.getX() - closestX;
-        double dy = center.getY() - closestY;
-        return dx * dx + dy * dy <= radius * radius;
-    }
-
     private static Axis chooseBounceAxisCircleRect(Point2D c, Rectangle2D rect) {
         double closestX = Math.max(rect.getMinX(), Math.min(c.getX(), rect.getMaxX()));
         double closestY = Math.max(rect.getMinY(), Math.min(c.getY(), rect.getMaxY()));
@@ -272,6 +202,121 @@ public class BallComponent extends Component {
         } else {
             return Axis.VERTICAL;
         }
+    }
+
+    private static class TOI {
+        double distance;
+        EntityType target;
+        Rectangle2D targetBox;
+        Entity targetEntity;
+        Runnable onHit;
+
+        void brickHitCallbackIfAny() {
+            if (onHit != null) onHit.run();
+        }
+    }
+
+    private TOI findEarliestTOI(Point2D dirUnit, double maxDistance) {
+        TOI best = null;
+        Point2D c = getBallCenter(entity);
+        double r = getBallRadius(entity);
+
+        // Walls
+        var world = FXGL.getGameWorld();
+        var walls = world.getEntitiesByType(EntityType.WALL_LEFT, EntityType.WALL_RIGHT, EntityType.WALL_TOP, EntityType.WALL_BOTTOM_SENSOR, EntityType.WALL_SAFETY);
+        for (Entity wall : walls) {
+            EntityType type = (EntityType) wall.getTypeComponent().getValue();
+            if (type == EntityType.WALL_SAFETY && velocity.getY() < 0) {
+                continue;
+            }
+            Rectangle2D ra = getAABB(wall);
+            TOI hit = sweepCircleAgainstAABB(c, dirUnit, r, ra);
+            if (hit != null && hit.distance <= maxDistance) {
+                if (type == EntityType.WALL_LEFT) hit.target = EntityType.WALL_LEFT;
+                else if (type == EntityType.WALL_RIGHT) hit.target = EntityType.WALL_RIGHT;
+                else if (type == EntityType.WALL_TOP) hit.target = EntityType.WALL_TOP;
+                else if (type == EntityType.WALL_BOTTOM_SENSOR) hit.target = EntityType.WALL_BOTTOM_SENSOR;
+                else if (type == EntityType.WALL_SAFETY) hit.target = EntityType.WALL_SAFETY;
+                hit.targetEntity = wall;
+                best = pickBetter(best, hit);
+            }
+        }
+
+        // paddle (only if moving down)
+        if (paddle != null && paddle.isActive() && velocity.getY() > 0) {
+            Rectangle2D pr = getAABB(paddle);
+            TOI hit = sweepCircleAgainstAABB(c, dirUnit, r, pr);
+            if (hit != null && hit.distance <= maxDistance) {
+                hit.target = EntityType.PADDLE;
+                hit.targetEntity = paddle;
+                best = pickBetter(best, hit);
+            }
+        }
+
+        // bricks
+        var bricks = FXGL.getGameWorld().getEntitiesByType(EntityType.BRICK).stream().filter(Entity::isActive).toList();
+        for (Entity brick : bricks) {
+            var bc = brick.getComponentOptional(BrickComponent.class);
+            if (bc.isEmpty() || bc.get().isDestroyed()) continue;
+            Rectangle2D br = getAABB(brick);
+            TOI hit = sweepCircleAgainstAABB(c, dirUnit, r, br);
+            if (hit != null && hit.distance <= maxDistance) {
+                hit.target = EntityType.BRICK;
+                hit.targetEntity = brick;
+                hit.onHit = () -> bc.ifPresent(comp -> comp.onBallHit(entity));
+                best = pickBetter(best, hit);
+            }
+        }
+
+        return best;
+    }
+
+    private static TOI pickBetter(TOI current, TOI candidate) {
+        if (candidate == null) return current;
+        if (current == null) return candidate;
+        return candidate.distance < current.distance ? candidate : current;
+    }
+
+    // Swept circle vs AABB using Minkowski sum (expand rect by radius and cast point)
+    private static TOI sweepCircleAgainstAABB(Point2D c, Point2D dirUnit, double r, Rectangle2D rect) {
+        // Expand rectangle by radius
+        Rectangle2D expanded = new Rectangle2D(rect.getMinX() - r, rect.getMinY() - r,
+                rect.getWidth() + 2 * r, rect.getHeight() + 2 * r);
+        // Ray from c in dirUnit. Compute t to each slab and take entry time
+        double tx1, tx2, ty1, ty2;
+        double dx = dirUnit.getX();
+        double dy = dirUnit.getY();
+        double tminX, tmaxX, tminY, tmaxY;
+        double eps = 1e-8;
+        if (Math.abs(dx) < eps) {
+            if (c.getX() < expanded.getMinX() || c.getX() > expanded.getMaxX()) return null;
+            tminX = Double.NEGATIVE_INFINITY;
+            tmaxX = Double.POSITIVE_INFINITY;
+        } else {
+            tx1 = (expanded.getMinX() - c.getX()) / dx;
+            tx2 = (expanded.getMaxX() - c.getX()) / dx;
+            tminX = Math.min(tx1, tx2);
+            tmaxX = Math.max(tx1, tx2);
+        }
+        if (Math.abs(dy) < eps) {
+            if (c.getY() < expanded.getMinY() || c.getY() > expanded.getMaxY()) return null;
+            tminY = Double.NEGATIVE_INFINITY;
+            tmaxY = Double.POSITIVE_INFINITY;
+        } else {
+            ty1 = (expanded.getMinY() - c.getY()) / dy;
+            ty2 = (expanded.getMaxY() - c.getY()) / dy;
+            tminY = Math.min(ty1, ty2);
+            tmaxY = Math.max(ty1, ty2);
+        }
+        double tEnter = Math.max(tminX, tminY);
+        double tExit = Math.min(tmaxX, tmaxY);
+        if (tExit < 0) return null; // box is behind
+        if (tEnter > tExit) return null; // miss
+        if (tEnter < 0) tEnter = 0; // already inside expanded box, treat as immediate hit
+        TOI res = new TOI();
+        res.distance = tEnter * Math.hypot(dirUnit.getX(), dirUnit.getY()); // since dirUnit length=1, distance = tEnter
+        res.targetBox = rect;
+        return res;
     }
 
     public void launch() {

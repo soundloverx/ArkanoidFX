@@ -105,14 +105,14 @@ public class ArkanoidApp extends GameApplication {
                 MusicService.getInstance().play("main_menu.mp3");
             });
             surpriseService = new SurpriseService(ballFactory, wallsFactory);
-            physicsManager = new PhysicsManager(session, hudManager, v -> levelManager.spawnPaddleAndBall(), this::applySurprise);
+            physicsManager = new PhysicsManager(this::applySurprise);
             physicsManager.init();
         } catch (Exception e) {
             log.severe("Failed to load levels.txt" + e.getMessage());
             throw new RuntimeException(e);
         }
         EventBus.subscribe(EventType.HUD_UPDATE, e -> hudManager.refresh(session));
-        EventBus.subscribe(EventType.LAST_DESTRUCTIBLE_DESTROYED, e -> {
+        EventBus.subscribe(EventType.LEVEL_FINISHED, e -> {
             levelManager.onLevelCleared(() -> {
             });
         });
@@ -120,6 +120,7 @@ public class ArkanoidApp extends GameApplication {
             levelManager.onGameOver(() -> {
             });
         });
+        EventBus.subscribe(EventType.BALL_LOST, e -> processBallLost());
 
         FXGL.getGameScene().setBackgroundColor(Color.BLACK);
         showMainMenu();
@@ -142,6 +143,19 @@ public class ArkanoidApp extends GameApplication {
                 if (mainMenu != null && mainMenu.isVisible()) mainMenu.requestLayout();
             }, javafx.util.Duration.millis(50));
         }, javafx.util.Duration.millis(1));
+    }
+
+    private void processBallLost() {
+        if (!FXGL.getGameWorld().getEntitiesByType(EntityType.BALL).isEmpty()) {
+            return;
+        }
+        session.loseLife();
+        EventBus.publish(GameEvent.of(EventType.HUD_UPDATE));
+        if (session.getLives() > 0) {
+            levelManager.spawnPaddleAndBall();
+        } else {
+            EventBus.publish(GameEvent.of(EventType.GAME_OVER));
+        }
     }
 
     private void showMainMenu() {
