@@ -1,0 +1,9 @@
+{
+  "cols": 24,
+  "rows": 18,
+  "music": "level_01.mp3",
+  "background": "modern-red-abstract-3d-shapes-r3-2560x1440.jpg",
+  "cells": [
+    { "col": 2, "row": 2, "brickId": 1 }
+  ]
+}

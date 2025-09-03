@@ -21,7 +21,7 @@ public final class SurpriseService {
         this.wallsFactory = wallsFactory;
     }
 
-    public void applyMultiball(Entity sourceBall) {
+    public void applyMultiball() {
         // Snapshot current balls to avoid chain-spawning from newly created balls within the same frame
         List<Entity> balls = new ArrayList<>(FXGL.getGameWorld().getEntitiesByType(EntityType.BALL));
         if (balls.isEmpty()) {

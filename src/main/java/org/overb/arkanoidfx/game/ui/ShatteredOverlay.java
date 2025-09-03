@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.CacheHint;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.GaussianBlur;
@@ -18,12 +19,16 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Polygon;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
+import lombok.extern.java.Log;
+import org.overb.arkanoidfx.game.ResolutionManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@Log
 public class ShatteredOverlay extends StackPane {
 
     private final Group fragmentsLayer = new Group();
@@ -68,17 +73,17 @@ public class ShatteredOverlay extends StackPane {
         border.setStroke(Color.color(1, 1, 1, 0.15));
         border.setStrokeWidth(1.0);
 
-        // Subtle reflective gradient overlay to suggest rotation/reflection
         Polygon gradShape = new Polygon();
         gradShape.getPoints().setAll(clip.getPoints());
-        LinearGradient lg = new LinearGradient(
-                0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
-                new Stop(0.0, Color.color(1, 1, 1, 0.08)),
-                new Stop(0.35, Color.color(1, 1, 1, 0.02)),
-                new Stop(0.65, Color.color(0, 0, 0, 0.03)),
-                new Stop(1.0, Color.color(0, 0, 0, 0.10))
-        );
-        gradShape.setFill(lg);
+
+//        LinearGradient lg = new LinearGradient(
+//                0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
+//                new Stop(0.0, Color.color(1, 1, 1, 0.08)),
+//                new Stop(0.35, Color.color(1, 1, 1, 0.02)),
+//                new Stop(0.65, Color.color(0, 0, 0, 0.03)),
+//                new Stop(1.0, Color.color(0, 0, 0, 0.10))
+//        );
+//        gradShape.setFill(lg);
         gradShape.setMouseTransparent(true);
         gradShape.setBlendMode(BlendMode.SOFT_LIGHT);
 
@@ -139,15 +144,22 @@ public class ShatteredOverlay extends StackPane {
         WritableImage snap = takeSnapshot();
         double w = snap.getWidth();
         double h = snap.getHeight();
+        log.info(String.format("Snapshot size: %d x %d", (int) w, (int) h));
 
-//        ImageView iv = new ImageView(snap);
-//        iv.setEffect(new GaussianBlur(12));
-//        var params = new javafx.scene.SnapshotParameters();
-//        params.setFill(Color.TRANSPARENT);
-//        WritableImage blurred = iv.snapshot(params, null);
-//        BackgroundSize size = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true);
-//        BackgroundImage bg = new BackgroundImage(blurred, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, size);
-//        FXGL.getGameScene().getRoot().setBackground(new Background(bg));
+        ImageView iv = new ImageView(snap);
+        iv.setEffect(new GaussianBlur(6));
+        double overscan = 1.02;
+        iv.setScaleX(overscan);
+        iv.setScaleY(overscan);
+        iv.setPreserveRatio(false);
+        Group g = new Group(iv);
+        g.setClip(new Rectangle(w, h));
+        var params = new javafx.scene.SnapshotParameters();
+        params.setFill(Color.BLACK);
+        WritableImage blurred = g.snapshot(params, new WritableImage((int) w, (int) h));
+        BackgroundSize size = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true);
+        BackgroundImage bg = new BackgroundImage(blurred, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, size);
+        FXGL.getGameScene().getRoot().setBackground(new Background(bg));
 
         Point2D impact = new Point2D(w * 0.5, h * 0.5);
         List<Poly> polys = generateRadialSlices(w, h, impact);
@@ -156,7 +168,9 @@ public class ShatteredOverlay extends StackPane {
         }
         ShatteredOverlay overlay = new ShatteredOverlay(snap, polys);
         FXGL.getGameScene().addUINode(overlay);
+        overlay.setMinSize(w, h);
         overlay.setPrefSize(w, h);
+        overlay.setMaxSize(w, h);
         return overlay;
     }
 
@@ -169,7 +183,7 @@ public class ShatteredOverlay extends StackPane {
 
     private static WritableImage takeSnapshot() {
         var root = FXGL.getGameScene().getRoot();
-        var params = new javafx.scene.SnapshotParameters();
+        var params = new SnapshotParameters();
         params.setFill(Color.TRANSPARENT);
         return root.snapshot(params, null);
     }
@@ -181,7 +195,7 @@ public class ShatteredOverlay extends StackPane {
     }
 
     private static List<Poly> generateImpactBiasedFragments(double w, double h, Point2D impact) {
-        int baseCols = 8, baseRows = 5;
+        int baseCols = 16, baseRows = 10;
         double maxJitter = 24;
         Random rnd = new Random();
         List<Poly> out = new ArrayList<>();

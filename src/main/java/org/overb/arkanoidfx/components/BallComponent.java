@@ -17,7 +17,7 @@ public class BallComponent extends Component {
     private static double BASE_SPEED = BASE_DESIGN_SPEED;
     private static final double MIN_SPEED_MULTIPLIER = 0.5;
     private static final double MAX_SPEED_MULTIPLIER = 2.4;
-    private static final double STEP_FRACTION_OF_BALL = 0.25;
+    private static final double STEP_FRACTION_OF_BALL = 0.15;
     private static final int MAX_SUBSTEPS_PER_FRAME = 64;
     private static final double NUDGE = 0.25; // small nudge after bounce to avoid hitting the same brick twice
     private static final int CONTACT_SEARCH_ITERS = 3; // binary search iterations to find contact
@@ -90,17 +90,19 @@ public class BallComponent extends Component {
             // paddle
             if (checkAndResolvePaddleOverlap(direction, stepDistance)) {
                 direction = normalized(velocity);
-                entity.translate(direction.multiply(NUDGE));
+                entity.translate(direction.multiply(-NUDGE));
             }
             // walls
             if (checkAndResolveWallOverlap(direction, stepDistance)) {
                 direction = normalized(velocity);
-                entity.translate(direction.multiply(NUDGE));
+                entity.translate(direction.multiply(-NUDGE));
             }
             // bricks
             if (checkAndResolveBrickOverlap(direction, stepDistance)) {
                 direction = normalized(velocity);
-                entity.translate(direction.multiply(NUDGE));
+                // Instead of nudging forward (which may push us into an adjacent brick),
+                // nudge slightly opposite to the new velocity to stay just outside the contact.
+                entity.translate(direction.multiply(-NUDGE));
             }
         }
     }

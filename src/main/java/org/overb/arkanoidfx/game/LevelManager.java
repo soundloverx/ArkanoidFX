@@ -16,6 +16,7 @@ import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.loaders.LevelLoader;
 import org.overb.arkanoidfx.game.ui.HUDManager;
 import org.overb.arkanoidfx.game.ui.InGameMenuUI;
+import org.overb.arkanoidfx.game.ui.MouseUI;
 import org.overb.arkanoidfx.game.ui.ShatteredOverlay;
 import org.overb.arkanoidfx.game.world.BallFactory;
 import org.overb.arkanoidfx.game.world.PaddleFactory;
@@ -103,16 +104,25 @@ public final class LevelManager {
         cleanupLevelEntities();
         MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameController().pauseEngine();
-        FXGL.getGameScene().getRoot().setCursor(Cursor.DEFAULT);
+        hudManager.hide();
+        MouseUI.setMouseVisible(true);
         ArkanoidApp.setEndStateMenuVisible(true);
 
         StackPane[] refMenu = new StackPane[1];
-        refMenu[0] = InGameMenuUI.builder()
-                .withTitle("Level cleared")
-                .withMenuItem("Continue", () -> continueToNextLevel(afterDialog, refMenu, overlay))
-                .withMenuItem("Main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
-                .withMenuItem("Exit", () -> exitGame(refMenu, overlay))
-                .build();
+        if(hasNextLevel()) {
+            refMenu[0] = InGameMenuUI.builder()
+                    .withTitle("Level cleared")
+                    .withMenuItem("Continue", () -> continueToNextLevel(afterDialog, refMenu, overlay))
+                    .withMenuItem("Main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
+                    .withMenuItem("Exit", () -> exitGame(refMenu, overlay))
+                    .build();
+        } else {
+            refMenu[0] = InGameMenuUI.builder()
+                    .withTitle("All levels cleared")
+                    .withMenuItem("Main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
+                    .withMenuItem("Exit", () -> exitGame(refMenu, overlay))
+                    .build();
+        }
         FXGL.getGameScene().addUINode(refMenu[0]);
     }
 
@@ -152,7 +162,7 @@ public final class LevelManager {
         }
         FXGL.getGameController().resumeEngine();
         ArkanoidApp.setEndStateMenuVisible(false);
-        FXGL.getGameScene().getRoot().setCursor(Cursor.NONE);
+        MouseUI.setMouseVisible(false);
         if (afterDialog != null) afterDialog.run();
     }
 
@@ -161,7 +171,8 @@ public final class LevelManager {
         cleanupLevelEntities();
         MusicService.getInstance().stopCurrentMusic();
         FXGL.getGameController().pauseEngine();
-        FXGL.getGameScene().getRoot().setCursor(Cursor.DEFAULT);
+        hudManager.hide();
+        MouseUI.setMouseVisible(true);
         ArkanoidApp.setEndStateMenuVisible(true);
 
         StackPane[] refMenu = new StackPane[1];
@@ -183,6 +194,7 @@ public final class LevelManager {
 
     private void loadAndStart() {
         session.setCurrentLevel(currentLevelIndex + 1);
+        MouseUI.setMouseVisible(false);
         String levelFileName = levelOrder.get(currentLevelIndex);
         FXGL.getGameScene().clearUINodes();
         try {
@@ -243,5 +255,9 @@ public final class LevelManager {
             } catch (Exception ignored) {
             }
         }
+    }
+
+    private boolean hasNextLevel() {
+        return levelOrder != null && currentLevelIndex < levelOrder.size() - 1;
     }
 }

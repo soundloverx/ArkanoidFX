@@ -35,6 +35,7 @@ public final class HUDManager {
             hudFps.setFill(Color.YELLOW);
         }
 
+        this.show();
         FXGL.getGameScene().addUINodes(hudScore, hudCombo, hudMultiplier, hudLives, hudLevel, hudFps);
         if (fpsTimer != null) {
             fpsTimer.expire();
@@ -91,5 +92,23 @@ public final class HUDManager {
         element.setX(x);
         element.setY(bottom);
         return x - 16.0;
+    }
+
+    public void hide() {
+        hudLevel.setVisible(false);
+        hudScore.setVisible(false);
+        hudCombo.setVisible(false);
+        hudMultiplier.setVisible(false);
+        hudLives.setVisible(false);
+        hudFps.setVisible(false);
+    }
+
+    public void show() {
+        hudLevel.setVisible(true);
+        hudScore.setVisible(true);
+        hudCombo.setVisible(true);
+        hudMultiplier.setVisible(true);
+        hudLives.setVisible(true);
+        hudFps.setVisible(true);
     }
 }

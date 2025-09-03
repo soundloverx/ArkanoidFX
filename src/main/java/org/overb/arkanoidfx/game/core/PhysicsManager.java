@@ -19,10 +19,7 @@ public final class PhysicsManager {
     private final Consumer<Void> spawnPaddleAndBallAction;
     private final Consumer<Entity> surprisePickupAction;
 
-    public PhysicsManager(GameSession session,
-                          HUDManager hudManager,
-                          Consumer<Void> spawnPaddleAndBallAction,
-                          Consumer<Entity> surprisePickupAction) {
+    public PhysicsManager(GameSession session, HUDManager hudManager, Consumer<Void> spawnPaddleAndBallAction, Consumer<Entity> surprisePickupAction) {
         this.session = session;
         this.hudManager = hudManager;
         this.spawnPaddleAndBallAction = spawnPaddleAndBallAction;
