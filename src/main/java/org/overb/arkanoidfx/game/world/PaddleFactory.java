@@ -15,6 +15,8 @@ import org.overb.arkanoidfx.entities.PaddleEntity;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.ResolutionManager;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public final class PaddleFactory {
@@ -25,8 +27,10 @@ public final class PaddleFactory {
         this.repository = repository;
     }
 
-    public Entity spawnPaddle() {
-        PaddleEntity paddleDefinition = repository.getPaddles().values().stream().findFirst().orElse(null);
+    public Entity spawnPaddle(int levelIndex) {
+        List<Integer> paddleIds = new ArrayList<>(repository.getPaddles().keySet());
+        PaddleEntity paddleDefinition = repository.getPaddle(paddleIds.get(levelIndex % paddleIds.size()));
+
         double paddleWidth = EntityType.PADDLE.getDesignWidth();
         double paddleHeight = EntityType.PADDLE.getDesignHeight();
         double y = ResolutionManager.DESIGN_RESOLUTION.getHeight() - 80;
@@ -59,7 +63,7 @@ public final class PaddleFactory {
                 .with(new CollidableComponent(true))
                 .with(new PaddleComponent(paddleWidth, y));
         Entity paddle = builder.buildAndAttach();
-        if (paddleTexture != null && paddleDefinition.visual != null) {
+        if (paddleTexture != null && paddleDefinition != null && paddleDefinition.visual != null) {
             int frames = Math.max(1, paddleDefinition.visual.frames);
             double frameDuration = paddleDefinition.visual.frameDuration > 0 ? paddleDefinition.visual.frameDuration : 0.0;
             if (frames > 1 && frameDuration > 0) {

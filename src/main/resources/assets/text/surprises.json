@@ -4,10 +4,10 @@
       "id": 1,
       "name": "multiball",
       "visual": {
-        "sprite": "surprise_ball.png",
-        "frames": 20,
-        "frameW": 35,
-        "frameH": 30,
+        "sprite": "surprise_multiball.png",
+        "frames": 11,
+        "frameW": 59,
+        "frameH": 59,
         "frameDuration": 0.08
       },
       "fallSpeed": 160,
@@ -22,10 +22,10 @@
       "id": 2,
       "name": "safety_wall",
       "visual": {
-        "sprite": "surprise_lightning.png",
-        "frames": 20,
-        "frameW": 35,
-        "frameH": 30,
+        "sprite": "surprise_shield.png",
+        "frames": 11,
+        "frameW": 59,
+        "frameH": 59,
         "frameDuration": 0.08
       },
       "fallSpeed": 140,
@@ -41,9 +41,9 @@
       "name": "bonus_life",
       "visual": {
         "sprite": "surprise_life.png",
-        "frames": 20,
-        "frameW": 35,
-        "frameH": 30,
+        "frames": 11,
+        "frameW": 59,
+        "frameH": 59,
         "frameDuration": 0.08
       },
       "fallSpeed": 140,

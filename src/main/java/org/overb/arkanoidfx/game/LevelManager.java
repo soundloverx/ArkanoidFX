@@ -93,7 +93,7 @@ public final class LevelManager {
     }
 
     public void spawnPaddleAndBall() {
-        Entity paddle = paddleFactory.spawnPaddle();
+        Entity paddle = paddleFactory.spawnPaddle(currentLevelIndex);
         ballFactory.spawnBallAttachedToPaddle(paddle);
         MusicService.getInstance().play(currentLevel.music);
         hudManager.refresh(session);

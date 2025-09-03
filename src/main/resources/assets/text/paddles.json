@@ -3,14 +3,66 @@
     {
       "id": 1,
       "name": "default",
-      "sizeW": 100,
-      "sizeH": 20,
+      "sizeW": 954,
+      "sizeH": 136,
       "visual": {
-        "sprite": "paddle_default.png",
-        "frames": 13,
-        "frameW": 100,
-        "frameH": 20,
-        "frameDuration": 0.08
+        "sprite": "paddle_basic.png",
+        "frames": 1,
+        "frameW": 954,
+        "frameH": 136,
+        "frameDuration": 0
+      }
+    },
+    {
+      "id": 2,
+      "name": "neon",
+      "sizeW": 954,
+      "sizeH": 136,
+      "visual": {
+        "sprite": "paddle_neon.png",
+        "frames": 1,
+        "frameW": 954,
+        "frameH": 136,
+        "frameDuration": 0
+      }
+    },
+    {
+      "id": 3,
+      "name": "neon_retro",
+      "sizeW": 954,
+      "sizeH": 136,
+      "visual": {
+        "sprite": "paddle_neon_retro.png",
+        "frames": 1,
+        "frameW": 954,
+        "frameH": 136,
+        "frameDuration": 0
+      }
+    },
+    {
+      "id": 4,
+      "name": "ai",
+      "sizeW": 954,
+      "sizeH": 136,
+      "visual": {
+        "sprite": "paddle_ai.png",
+        "frames": 1,
+        "frameW": 954,
+        "frameH": 136,
+        "frameDuration": 0
+      }
+    },
+    {
+      "id": 5,
+      "name": "gold",
+      "sizeW": 954,
+      "sizeH": 136,
+      "visual": {
+        "sprite": "paddle_gold.png",
+        "frames": 1,
+        "frameW": 954,
+        "frameH": 136,
+        "frameDuration": 0
       }
     }
   ]

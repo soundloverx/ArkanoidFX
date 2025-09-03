@@ -76,19 +76,19 @@ public class ShatteredOverlay extends StackPane {
         Polygon gradShape = new Polygon();
         gradShape.getPoints().setAll(clip.getPoints());
 
-//        LinearGradient lg = new LinearGradient(
-//                0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
-//                new Stop(0.0, Color.color(1, 1, 1, 0.08)),
-//                new Stop(0.35, Color.color(1, 1, 1, 0.02)),
-//                new Stop(0.65, Color.color(0, 0, 0, 0.03)),
-//                new Stop(1.0, Color.color(0, 0, 0, 0.10))
-//        );
-//        gradShape.setFill(lg);
+        LinearGradient lg = new LinearGradient(
+                0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
+                new Stop(0.0, Color.color(1, 1, 1, 0.08)),
+                new Stop(0.35, Color.color(1, 1, 1, 0.02)),
+                new Stop(0.65, Color.color(0, 0, 0, 0.03)),
+                new Stop(1.0, Color.color(0, 0, 0, 0.10))
+        );
+        gradShape.setFill(lg);
         gradShape.setMouseTransparent(true);
         gradShape.setBlendMode(BlendMode.SOFT_LIGHT);
 
         Group g = new Group(iv, gradShape, border);
-        DropShadow ds = new DropShadow(6, Color.color(0, 0, 0, 0.25));
+        DropShadow ds = new DropShadow(6, Color.color(1, 1, 1, 0.25));
         ds.setSpread(0.06);
         g.setEffect(ds);
         g.setCache(true);
@@ -195,7 +195,7 @@ public class ShatteredOverlay extends StackPane {
     }
 
     private static List<Poly> generateImpactBiasedFragments(double w, double h, Point2D impact) {
-        int baseCols = 16, baseRows = 10;
+        int baseCols = 8, baseRows = 6;
         double maxJitter = 24;
         Random rnd = new Random();
         List<Poly> out = new ArrayList<>();
@@ -271,8 +271,7 @@ public class ShatteredOverlay extends StackPane {
             }
             double a0 = Math.toRadians(angle);
             double a1 = Math.toRadians(angle + span);
-
-            int bands = 1 + rnd.nextInt(3);
+            int bands = 1 + rnd.nextInt(4);
             double rPrev = 0.0;
             for (int b = 0; b < bands; b++) {
                 double remaining = maxR - rPrev;

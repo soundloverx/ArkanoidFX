@@ -4,6 +4,7 @@ import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.Entity;
+import com.almasb.fxgl.physics.CollisionHandler;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
@@ -27,7 +28,6 @@ import org.overb.arkanoidfx.game.ResolutionManager;
 import org.overb.arkanoidfx.game.SurpriseService;
 import org.overb.arkanoidfx.game.core.EventBus;
 import org.overb.arkanoidfx.game.core.GameEvent;
-import org.overb.arkanoidfx.game.core.PhysicsManager;
 import org.overb.arkanoidfx.game.loaders.DefinitionsLoader;
 import org.overb.arkanoidfx.game.loaders.LevelLoader;
 import org.overb.arkanoidfx.game.ui.*;
@@ -58,7 +58,6 @@ public class ArkanoidApp extends GameApplication {
     private WallsFactory wallsFactory;
     private PaddleFactory paddleFactory;
     private LevelManager levelManager;
-    private PhysicsManager physicsManager;
     private SurpriseService surpriseService;
 
 
@@ -105,8 +104,13 @@ public class ArkanoidApp extends GameApplication {
                 MusicService.getInstance().play("main_menu.mp3");
             });
             surpriseService = new SurpriseService(ballFactory, wallsFactory);
-            physicsManager = new PhysicsManager(this::applySurprise);
-            physicsManager.init();
+            FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PADDLE, EntityType.SURPRISE) {
+                @Override
+                protected void onCollisionBegin(Entity paddle, Entity surprise) {
+                    applySurprise(surprise);
+                    surprise.removeFromWorld();
+                }
+            });
         } catch (Exception e) {
             log.severe("Failed to load levels.txt" + e.getMessage());
             throw new RuntimeException(e);
