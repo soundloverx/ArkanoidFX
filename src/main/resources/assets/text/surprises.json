@@ -5,7 +5,7 @@
       "name": "multiball",
       "visual": {
         "sprite": "surprise_multiball.png",
-        "frames": 11,
+        "frames": 24,
         "frameW": 59,
         "frameH": 59,
         "frameDuration": 0.08
@@ -23,7 +23,7 @@
       "name": "safety_wall",
       "visual": {
         "sprite": "surprise_shield.png",
-        "frames": 11,
+        "frames": 24,
         "frameW": 59,
         "frameH": 59,
         "frameDuration": 0.08
@@ -41,7 +41,7 @@
       "name": "bonus_life",
       "visual": {
         "sprite": "surprise_life.png",
-        "frames": 11,
+        "frames": 24,
         "frameW": 59,
         "frameH": 59,
         "frameDuration": 0.08
