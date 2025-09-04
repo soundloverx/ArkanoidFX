@@ -8,7 +8,7 @@
         "frames": 24,
         "frameW": 59,
         "frameH": 59,
-        "frameDuration": 0.08
+        "frameDuration": 0.042
       },
       "fallSpeed": 160,
       "effect": "MULTIBALL",
@@ -26,7 +26,7 @@
         "frames": 24,
         "frameW": 59,
         "frameH": 59,
-        "frameDuration": 0.08
+        "frameDuration": 0.042
       },
       "fallSpeed": 140,
       "effect": "SAFETY_WALL",
@@ -48,7 +48,7 @@
       },
       "fallSpeed": 140,
       "effect": "BONUS_LIFE",
-      "spawnChance": 0.05,
+      "spawnChance": 0.042,
       "sound": "bonus_life.wav"
     }
   ]

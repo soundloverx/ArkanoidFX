@@ -110,6 +110,7 @@ public final class LevelManager {
 
         StackPane[] refMenu = new StackPane[1];
         if(hasNextLevel()) {
+            MusicService.getInstance().play("level_cleared.mp3");
             refMenu[0] = InGameMenuUI.builder()
                     .withTitle("Level cleared")
                     .withMenuItem("Continue", () -> continueToNextLevel(afterDialog, refMenu, overlay))
@@ -117,6 +118,7 @@ public final class LevelManager {
                     .withMenuItem("Exit", () -> exitGame(refMenu, overlay))
                     .build();
         } else {
+            MusicService.getInstance().play("scores.mp3");
             refMenu[0] = InGameMenuUI.builder()
                     .withTitle("All levels cleared")
                     .withMenuItem("Main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
@@ -175,6 +177,7 @@ public final class LevelManager {
         MouseUI.setMouseVisible(true);
         ArkanoidApp.setEndStateMenuVisible(true);
 
+        MusicService.getInstance().play("loser.mp3");
         StackPane[] refMenu = new StackPane[1];
         refMenu[0] = InGameMenuUI.builder()
                 .withTitle("Game over")
