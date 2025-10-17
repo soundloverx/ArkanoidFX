@@ -9,7 +9,8 @@ import javafx.scene.paint.Color;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import org.overb.arkanoidfx.ArkanoidApp;
-import org.overb.arkanoidfx.audio.MusicService;
+import org.overb.arkanoidfx.audio.LevelMusicService;
+import org.overb.arkanoidfx.audio.MusicBus;
 import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.LevelEntity;
 import org.overb.arkanoidfx.enums.EntityType;
@@ -57,7 +58,7 @@ public final class LevelManager {
     }
 
     public void quitToMainMenuNoDialog() {
-        MusicService.getInstance().stopCurrentMusic();
+        LevelMusicService.getInstance().stopCurrentMusic();
         FXGL.getGameWorld().getEntitiesByType(
                 EntityType.BALL, EntityType.SURPRISE, EntityType.BRICK, EntityType.WALL_SAFETY, EntityType.PADDLE
         ).forEach(e -> {
@@ -73,8 +74,8 @@ public final class LevelManager {
     private void returnToMainMenu() {
         FXGL.getGameScene().clearUINodes();
         FXGL.getGameScene().setBackgroundColor(Color.web("#000000"));
-        MusicService.getInstance().stopCurrentMusic();
-        MusicService.getInstance().play("main_menu.mp3");
+        LevelMusicService.getInstance().stopCurrentMusic();
+        MusicBus.getInstance().loop("main_menu.mp3");
         if (menuReturnHandler != null) {
             menuReturnHandler.showMainMenu();
         }
@@ -93,16 +94,26 @@ public final class LevelManager {
     }
 
     public void spawnPaddleAndBall() {
-        Entity paddle = paddleFactory.spawnPaddle(currentLevelIndex);
+        var paddles = FXGL.getGameWorld().getEntitiesByType(EntityType.PADDLE);
+        Entity paddle;
+        if (paddles.isEmpty()) {
+            paddle = paddleFactory.spawnPaddle(currentLevelIndex);
+        } else {
+            paddle = paddles.getFirst();
+            for (int i = 1; i < paddles.size(); i++) {
+                var extra = paddles.get(i);
+                if (extra.isActive()) extra.removeFromWorld();
+            }
+        }
         ballFactory.spawnBallAttachedToPaddle(paddle);
-        MusicService.getInstance().play(currentLevel.music);
+        LevelMusicService.getInstance().play(currentLevel.music);
         hudManager.refresh(session);
     }
 
     public void onLevelCleared(Runnable afterDialog) {
         ShatteredOverlay overlay = ShatteredOverlay.showBackground();
         cleanupLevelEntities();
-        MusicService.getInstance().stopCurrentMusic();
+        LevelMusicService.getInstance().stopCurrentMusic();
         FXGL.getGameController().pauseEngine();
         hudManager.hide();
         MouseUI.setMouseVisible(true);
@@ -110,7 +121,7 @@ public final class LevelManager {
 
         StackPane[] refMenu = new StackPane[1];
         if(hasNextLevel()) {
-            MusicService.getInstance().play("level_cleared.mp3");
+            MusicBus.getInstance().loop("level_cleared.mp3");
             refMenu[0] = InGameMenuUI.builder()
                     .withTitle("Level cleared")
                     .withMenuItem("Continue", () -> continueToNextLevel(afterDialog, refMenu, overlay))
@@ -118,7 +129,7 @@ public final class LevelManager {
                     .withMenuItem("Exit", () -> exitGame(refMenu, overlay))
                     .build();
         } else {
-            MusicService.getInstance().play("scores.mp3");
+            MusicBus.getInstance().loop("scores.mp3");
             refMenu[0] = InGameMenuUI.builder()
                     .withTitle("All levels cleared")
                     .withMenuItem("Main menu", () -> quitToMainMenu(afterDialog, refMenu, overlay))
@@ -171,13 +182,13 @@ public final class LevelManager {
     public void onGameOver(Runnable afterDialog) {
         ShatteredOverlay overlay = ShatteredOverlay.showBackground();
         cleanupLevelEntities();
-        MusicService.getInstance().stopCurrentMusic();
+        LevelMusicService.getInstance().stopCurrentMusic();
         FXGL.getGameController().pauseEngine();
         hudManager.hide();
         MouseUI.setMouseVisible(true);
         ArkanoidApp.setEndStateMenuVisible(true);
 
-        MusicService.getInstance().play("loser.mp3");
+        MusicBus.getInstance().loop("loser.mp3");
         StackPane[] refMenu = new StackPane[1];
         refMenu[0] = InGameMenuUI.builder()
                 .withTitle("Game over")

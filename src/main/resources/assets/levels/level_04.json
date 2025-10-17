@@ -2,7 +2,7 @@
   "cols": 24,
   "rows": 18,
   "music": "level_04.mp3",
-  "background": "group-of-red-black-cubes-c8-2560x1440.jpg",
+  "background": "default_bg.jpg",
   "cells": [
     { "col": 2, "row": 1, "brickId": 4 }, { "col": 3, "row": 1, "brickId": 1 }, { "col": 4, "row": 1, "brickId": 4 }, { "col": 5, "row": 1, "brickId": 1 }, { "col": 6, "row": 1, "brickId": 4 }, { "col": 7, "row": 1, "brickId": 1 }, { "col": 8, "row": 1, "brickId": 4 }, { "col": 9, "row": 1, "brickId": 1 }, { "col": 10, "row": 1, "brickId": 4 }, { "col": 11, "row": 1, "brickId": 1 }, { "col": 12, "row": 1, "brickId": 4 }, { "col": 13, "row": 1, "brickId": 1 }, { "col": 14, "row": 1, "brickId": 4 }, { "col": 15, "row": 1, "brickId": 1 }, { "col": 16, "row": 1, "brickId": 4 }, { "col": 17, "row": 1, "brickId": 1 }, { "col": 18, "row": 1, "brickId": 4 }, { "col": 19, "row": 1, "brickId": 1 }, { "col": 20, "row": 1, "brickId": 4 },
 

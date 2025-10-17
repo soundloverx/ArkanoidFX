@@ -22,7 +22,6 @@ public class BallComponent extends Component {
     private static final double STEP_FRACTION_OF_BALL = 0.15;
     private static final int MAX_SUBSTEPS_PER_FRAME = 64;
     private static final double NUDGE = 0.25; // small nudge after bounce to avoid hitting the same brick twice
-    private static final int CONTACT_SEARCH_ITERS = 3; // binary search iterations to find contact
     // anti-trap parameters
     private static final double MIN_ABS_VY = 60.0;      // minimum vertical speed component after any bounce
     private static final double TINY_JITTER_RAD = 0.02; // small jitter to avoid infinite vertical bouncing
@@ -112,11 +111,23 @@ public class BallComponent extends Component {
                 }
                 switch (best.target) {
                     case WALL_LEFT:
+                        if (velocity.getX() <= 0) {
+                            bounceHorizontal();
+                            playWallHit();
+                        }
+                        break;
                     case WALL_RIGHT:
-                        bounceHorizontal();
-                        playWallHit();
+                        if (velocity.getX() >= 0) {
+                            bounceHorizontal();
+                            playWallHit();
+                        }
                         break;
                     case WALL_TOP:
+                        if (velocity.getY() <= 0) {
+                            bounceVertical();
+                            playWallHit();
+                        }
+                        break;
                     case WALL_SAFETY:
                         bounceVertical();
                         playWallHit();
@@ -366,6 +377,8 @@ public class BallComponent extends Component {
         double newSpeed = Math.min(unclamped, maxSpeed);
         speedMultiplier = clamp(newSpeed / BASE_SPEED);
         setSpeedDir(new Point2D(dx, dy), newSpeed);
+        final double hitOffset = offset;
+        paddle.getComponentOptional(PaddleComponent.class).ifPresent(pc -> pc.onBallHit(hitOffset));
     }
 
     public void setLaunchedWithVelocity(Point2D initialVelocity) {

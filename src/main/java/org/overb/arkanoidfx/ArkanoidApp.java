@@ -13,7 +13,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
 import org.overb.arkanoidfx.audio.AudioMixer;
-import org.overb.arkanoidfx.audio.MusicService;
+import org.overb.arkanoidfx.audio.LevelMusicService;
+import org.overb.arkanoidfx.audio.MusicBus;
 import org.overb.arkanoidfx.audio.SfxBus;
 import org.overb.arkanoidfx.components.BallComponent;
 import org.overb.arkanoidfx.components.DebugHitboxViewComponent;
@@ -101,7 +102,7 @@ public class ArkanoidApp extends GameApplication {
             levelManager.setLevelOrder(levelOrder);
             levelManager.setMenuReturnHandler(() -> {
                 showMainMenu();
-                MusicService.getInstance().play("main_menu.mp3");
+                MusicBus.getInstance().loop("main_menu.mp3");
             });
             surpriseService = new SurpriseService(ballFactory, wallsFactory);
             FXGL.getPhysicsWorld().addCollisionHandler(new CollisionHandler(EntityType.PADDLE, EntityType.SURPRISE) {
@@ -128,7 +129,7 @@ public class ArkanoidApp extends GameApplication {
 
         FXGL.getGameScene().setBackgroundColor(Color.BLACK);
         showMainMenu();
-        MusicService.getInstance().play("main_menu.mp3");
+        MusicBus.getInstance().loop("main_menu.mp3");
         FXGL.getGameTimer().runOnceAfter(() -> {
             Stage stage = FXGL.getPrimaryStage();
             ConfigOptions cfg = ConfigIO.loadOrDefault();
@@ -219,7 +220,7 @@ public class ArkanoidApp extends GameApplication {
     }
 
     private void startGameFromMenu() {
-        MusicService.getInstance().stopCurrentMusic();
+        LevelMusicService.getInstance().stopCurrentMusic();
         FXGL.getGameScene().clearUINodes();
         MouseUI.setMouseVisible(false);
         levelManager.startInitialLevel();
