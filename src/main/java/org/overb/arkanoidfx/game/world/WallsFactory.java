@@ -7,7 +7,8 @@ import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.time.TimerAction;
-import javafx.scene.paint.Color;
+import javafx.scene.image.Image;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.ResolutionManager;
@@ -47,13 +48,16 @@ public final class WallsFactory {
     public void enableSafetyWall(double durationSeconds) {
         if (safetyWall == null || !safetyWall.isActive()) {
             double sceneWidth = ResolutionManager.DESIGN_RESOLUTION.getWidth();
-            double viewHeight = 8.0;
             double bboxHeight = 8.0;
-            double y = ResolutionManager.DESIGN_RESOLUTION.getHeight() - 40.0;
+            Image safetyImg = FXGL.image("safety_wall_single_small.png");
+            double viewHeight = safetyImg.getHeight();
+            double y = ResolutionManager.DESIGN_RESOLUTION.getHeight() - viewHeight;
+            Rectangle viewRect = new Rectangle(sceneWidth, viewHeight);
+            viewRect.setFill(new ImagePattern(safetyImg, 0, 0, safetyImg.getWidth(), safetyImg.getHeight(), false));
             safetyWall = new EntityBuilder()
                     .type(EntityType.WALL_SAFETY)
                     .at(0, y)
-                    .view(new Rectangle(sceneWidth, viewHeight, Color.color(0, 1, 0, 0.3)))
+                    .view(viewRect)
                     .bbox(new HitBox(BoundingShape.box(sceneWidth, bboxHeight)))
                     .with(new CollidableComponent(true))
                     .buildAndAttach();
