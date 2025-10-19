@@ -15,6 +15,7 @@ import javafx.scene.text.Text;
 import org.overb.arkanoidfx.ConfigOptions;
 import org.overb.arkanoidfx.audio.AudioMixer;
 import org.overb.arkanoidfx.game.ResolutionManager;
+import org.overb.arkanoidfx.game.ui.base.FullscreenMenuUI;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class OptionsMenuUI extends StackPane {
+public class OptionsMenuUI extends FullscreenMenuUI {
 
     private final GridPane grid = new GridPane();
     private final ComboBox<String> resolutionBox = new ComboBox<>();
@@ -202,16 +203,5 @@ public class OptionsMenuUI extends StackPane {
         AudioMixer.getInstance().setMasterVolume(cfg.audio.master);
         AudioMixer.getInstance().setMusicVolume(cfg.audio.music);
         AudioMixer.getInstance().setSfxVolume(cfg.audio.sfx);
-    }
-
-    private void applyBackground(String resource) {
-        try {
-            Image img = new Image(Objects.requireNonNull(getClass().getResourceAsStream(resource)));
-            BackgroundSize size = new BackgroundSize(BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, true, true);
-            BackgroundImage bg = new BackgroundImage(img, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, size);
-            setBackground(new Background(bg));
-        } catch (Exception e) {
-            setStyle("-fx-background-color: black;");
-        }
     }
 }

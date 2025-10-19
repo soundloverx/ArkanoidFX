@@ -9,6 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.FileChooser;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
@@ -45,6 +46,7 @@ public class ArkanoidApp extends GameApplication {
     private static volatile boolean endStateMenuVisible = false;
 
     private MainMenuUI mainMenu;
+    private PlayMenuUI playMenu;
     private OptionsMenuUI optionsMenu;
     private InGameMenuUI pauseMenu;
     private boolean paused = false;
@@ -145,6 +147,7 @@ public class ArkanoidApp extends GameApplication {
             ResolutionManager.getInstance().hookResizeListeners(stage, FXGL.getGameScene().getRoot());
             FXGL.runOnce(() -> {
                 if (optionsMenu != null && optionsMenu.isVisible()) optionsMenu.requestLayout();
+                if (playMenu != null && playMenu.isVisible()) playMenu.requestLayout();
                 if (mainMenu != null && mainMenu.isVisible()) mainMenu.requestLayout();
             }, javafx.util.Duration.millis(50));
         }, javafx.util.Duration.millis(1));
@@ -168,7 +171,7 @@ public class ArkanoidApp extends GameApplication {
         if (mainMenu == null) {
             mainMenu = new MainMenuUI(item -> {
                 switch (item) {
-                    case PLAY -> startGameFromMenu();
+                    case PLAY -> showPlayMenu();
                     case EDITOR -> {
                         // TODO later
                     }
@@ -179,6 +182,55 @@ public class ArkanoidApp extends GameApplication {
         }
         FXGL.getGameScene().clearUINodes();
         FXGL.getGameScene().addUINodes(mainMenu);
+    }
+
+    private void showPlayMenu() {
+        MouseUI.setMouseVisible(true);
+        if (playMenu == null) {
+            playMenu = new PlayMenuUI(item -> {
+                switch (item) {
+                    case CLASSIC -> {
+                        // Reset to embedded classic order and disable filesystem-only mode
+                        levelManager.setLevelOrder(levelOrder);
+                        levelManager.setCustomLevelsFromFileSystem(false);
+                        startGameFromMenu();
+                    }
+                    case CUSTOM_PLAYLIST -> {
+                        FileChooser chooser = new FileChooser();
+                        chooser.setTitle("Select custom level playlist (txt)");
+                        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
+                        var file = chooser.showOpenDialog(FXGL.getPrimaryStage());
+                        if (file != null) {
+                            try {
+                                var customOrder = new org.overb.arkanoidfx.game.loaders.LevelLoader().loadLevelOrderFromFile(file.getAbsolutePath());
+                                if (customOrder != null && !customOrder.isEmpty()) {
+                                    levelManager.setLevelOrder(customOrder);
+                                    levelManager.setCustomLevelsFromFileSystem(true);
+                                    startGameFromMenu();
+                                }
+                            } catch (Exception ex) {
+                                log.severe("Failed to load custom playlist: " + ex.getMessage());
+                            }
+                        }
+                    }
+                    case SINGLE_LEVEL -> {
+                        FileChooser chooser = new FileChooser();
+                        chooser.setTitle("Select a custom level (json)");
+                        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON Files", "*.json"));
+                        var file = chooser.showOpenDialog(FXGL.getPrimaryStage());
+                        if (file != null) {
+                            var order = java.util.List.of(file.getAbsolutePath());
+                            levelManager.setLevelOrder(order);
+                            levelManager.setCustomLevelsFromFileSystem(true);
+                            startGameFromMenu();
+                        }
+                    }
+                    case BACK -> showMainMenu();
+                }
+            });
+        }
+        FXGL.getGameScene().clearUINodes();
+        FXGL.getGameScene().addUINodes(playMenu);
     }
 
     private void showOptionsMenu() {

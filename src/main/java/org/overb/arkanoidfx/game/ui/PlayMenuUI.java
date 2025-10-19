@@ -16,13 +16,13 @@ import org.overb.arkanoidfx.game.ui.base.FullscreenMenuUI;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class MainMenuUI extends FullscreenMenuUI {
+public class PlayMenuUI extends FullscreenMenuUI {
 
     private final VBox menuBox = new VBox(16);
 
-    public enum Item { PLAY, EDITOR, OPTIONS, EXIT }
+    public enum Item { CLASSIC, CUSTOM_PLAYLIST, SINGLE_LEVEL, BACK }
 
-    public MainMenuUI(Consumer<Item> onAction) {
+    public PlayMenuUI(Consumer<Item> onAction) {
         applyBackground("/assets/textures/bg/black-red-square-rectangle-rq-2560x1440.jpg");
         setPrefSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
         setMaxSize(ResolutionManager.DESIGN_RESOLUTION.getWidth(), ResolutionManager.DESIGN_RESOLUTION.getHeight());
@@ -30,18 +30,18 @@ public class MainMenuUI extends FullscreenMenuUI {
         menuBox.setAlignment(Pos.CENTER);
         getChildren().add(menuBox);
 
-        Text title = new Text("ArkanoidFX");
+        Text title = new Text("Play");
         title.setFill(Color.WHITE);
-        title.setFont(Font.font("Verdana", FontWeight.BOLD, 60));
+        title.setFont(Font.font("Verdana", FontWeight.BOLD, 56));
         var titleWrapper = new StackPane(title);
         titleWrapper.setPadding(new Insets(20, 20, 40, 20));
         title.setEffect(new DropShadow(35, Color.DARKVIOLET));
         menuBox.getChildren().add(titleWrapper);
 
-        addItem("Play", () -> onAction.accept(Item.PLAY));
-        addItem("Level Editor", () -> onAction.accept(Item.EDITOR));
-        addItem("Options", () -> onAction.accept(Item.OPTIONS));
-        addItem("Exit", () -> onAction.accept(Item.EXIT));
+        addItem("Classic levels", () -> onAction.accept(Item.CLASSIC));
+        addItem("Custom level playlist", () -> onAction.accept(Item.CUSTOM_PLAYLIST));
+        addItem("Single custom level", () -> onAction.accept(Item.SINGLE_LEVEL));
+        addItem("Back", () -> onAction.accept(Item.BACK));
 
         widthProperty().addListener((o, ov, nv) -> requestLayout());
         heightProperty().addListener((o, ov, nv) -> requestLayout());
@@ -68,7 +68,7 @@ public class MainMenuUI extends FullscreenMenuUI {
     private void addItem(String label, Runnable action) {
         Text text = new Text(label);
         text.setFill(Color.WHITE);
-        text.setFont(Font.font("Cambria", 48));
+        text.setFont(Font.font("Cambria", 44));
         applyHoverEffects(text);
         text.setOnMouseClicked(e -> action.run());
         menuBox.getChildren().add(text);

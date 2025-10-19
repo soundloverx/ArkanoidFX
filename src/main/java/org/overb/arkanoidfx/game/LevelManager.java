@@ -15,14 +15,14 @@ import org.overb.arkanoidfx.entities.EntityRepository;
 import org.overb.arkanoidfx.entities.LevelEntity;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.loaders.LevelLoader;
-import org.overb.arkanoidfx.game.ui.HUDManager;
-import org.overb.arkanoidfx.game.ui.InGameMenuUI;
-import org.overb.arkanoidfx.game.ui.MouseUI;
-import org.overb.arkanoidfx.game.ui.ShatteredOverlay;
+import org.overb.arkanoidfx.game.ui.*;
 import org.overb.arkanoidfx.game.world.BallFactory;
 import org.overb.arkanoidfx.game.world.PaddleFactory;
 import org.overb.arkanoidfx.game.world.WallsFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Log
@@ -39,6 +39,8 @@ public final class LevelManager {
     private final PaddleFactory paddleFactory;
     private final BallFactory ballFactory;
     private final LevelLoader levelLoader;
+    @Setter
+    private boolean customLevelsFromFileSystem = false;
     @Setter
     private MenuReturnHandler menuReturnHandler;
 
@@ -219,10 +221,28 @@ public final class LevelManager {
         session.resetLevel();
         LevelEntity level;
         try {
-            level = levelLoader.loadLevel(levelFileName);
+            Path p = Paths.get(levelFileName);
+            if (customLevelsFromFileSystem) {
+                if (Files.exists(p)) {
+                    level = levelLoader.loadLevelFromFile(levelFileName);
+                } else {
+                    log.warning("Custom level file not found on disk: " + levelFileName);
+                    showMissingLevelAndReturn(levelFileName);
+                    return;
+                }
+            } else {
+                // classpath levels and absolute paths
+                if (Files.exists(p)) {
+                    level = levelLoader.loadLevelFromFile(levelFileName);
+                } else {
+                    level = levelLoader.loadLevel(levelFileName);
+                }
+            }
         } catch (Exception ex) {
             log.severe("Failed to load level: " + levelFileName + " : " + ex.getMessage());
-            throw new RuntimeException(ex);
+            NotificationUI.show("Failed to load level:\n" + levelFileName);
+            quitToMainMenuNoDialog();
+            return;
         }
         currentLevel = level;
         log.info("Loaded level: " + levelFileName + " (" + level.cols + "x" + level.rows + "), music=" + level.music + ", background=" + level.background);
@@ -273,5 +293,10 @@ public final class LevelManager {
 
     private boolean hasNextLevel() {
         return levelOrder != null && currentLevelIndex < levelOrder.size() - 1;
+    }
+
+    private void showMissingLevelAndReturn(String levelPath) {
+        NotificationUI.show("Level file not found:\n" + levelPath);
+        quitToMainMenuNoDialog();
     }
 }
