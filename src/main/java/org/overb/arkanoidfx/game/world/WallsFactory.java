@@ -7,16 +7,24 @@ import com.almasb.fxgl.entity.components.CollidableComponent;
 import com.almasb.fxgl.physics.BoundingShape;
 import com.almasb.fxgl.physics.HitBox;
 import com.almasb.fxgl.time.TimerAction;
+import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
 import javafx.scene.image.Image;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 import org.overb.arkanoidfx.enums.EntityType;
 import org.overb.arkanoidfx.game.ResolutionManager;
 
 public final class WallsFactory {
 
     private Entity safetyWall;
+    private Rectangle safetyWallView;
     private TimerAction safetyWallTimer;
+    private TimerAction flickerStartTimer;
+    private TimerAction flickerSpeedUpTimer;
+    private FadeTransition appearFade;
+    private FadeTransition expireFlicker;
 
     public void spawnWalls() {
         new EntityBuilder()
@@ -61,19 +69,102 @@ public final class WallsFactory {
                     .bbox(new HitBox(BoundingShape.box(sceneWidth, bboxHeight)))
                     .with(new CollidableComponent(true))
                     .buildAndAttach();
+
+            safetyWallView = viewRect;
+            if (appearFade != null) {
+                appearFade.stop();
+            }
+            safetyWallView.setOpacity(0.0);
+            appearFade = new FadeTransition(Duration.millis(300), safetyWallView);
+            appearFade.setFromValue(0.0);
+            appearFade.setToValue(1.0);
+            appearFade.play();
+
             pushBallsAboveSafetyWall();
-            FXGL.getGameTimer().runOnceAfter(this::pushBallsAboveSafetyWall, javafx.util.Duration.millis(1));
+            FXGL.getGameTimer().runOnceAfter(this::pushBallsAboveSafetyWall, Duration.millis(1));
+        } else {
+            if (safetyWallView != null) {
+                safetyWallView.setOpacity(1.0);
+            }
         }
         if (safetyWallTimer != null) {
             safetyWallTimer.expire();
         }
+        stopExpireWarning();
         safetyWallTimer = FXGL.getGameTimer().runOnceAfter(() -> {
+            stopExpireWarning();
             if (safetyWall != null && safetyWall.isActive()) {
                 safetyWall.removeFromWorld();
             }
             safetyWall = null;
+            safetyWallView = null;
             safetyWallTimer = null;
-        }, javafx.util.Duration.seconds(durationSeconds));
+        }, Duration.seconds(durationSeconds));
+        double warnWindow = Math.min(3.0, Math.max(0.0, durationSeconds));
+        double delayBeforeWarn = Math.max(0.0, durationSeconds - warnWindow);
+        if (warnWindow > 0.0) {
+            if (delayBeforeWarn == 0.0) {
+                startExpireWarning(warnWindow);
+            } else {
+                flickerStartTimer = FXGL.getGameTimer().runOnceAfter(() -> startExpireWarning(warnWindow), Duration.seconds(delayBeforeWarn));
+            }
+        }
+    }
+
+    private void startExpireWarning(double warnWindowSeconds) {
+        if (safetyWallView == null) {
+            return;
+        }
+        if (expireFlicker != null) {
+            expireFlicker.stop();
+        }
+        expireFlicker = new FadeTransition(Duration.millis(600), safetyWallView);
+        expireFlicker.setFromValue(1.0);
+        expireFlicker.setToValue(0.35);
+        expireFlicker.setAutoReverse(true);
+        expireFlicker.setCycleCount(Animation.INDEFINITE);
+        expireFlicker.play();
+
+        final int maxSteps = Math.max(1, (int) Math.floor(warnWindowSeconds / 0.25));
+        final int[] step = new int[]{0};
+        final TimerAction[] holder = new TimerAction[1];
+        holder[0] = FXGL.getGameTimer().runAtInterval(() -> {
+            if (safetyWall == null || !safetyWall.isActive() || safetyWallView == null) {
+                if (holder[0] != null) holder[0].expire();
+                return;
+            }
+            step[0]++;
+            double progress = Math.min(1.0, step[0] / (double) maxSteps);
+            // increase flicker speed
+            double newMs = 600.0 - progress * (600.0 - 120.0);
+            if (expireFlicker != null) {
+                expireFlicker.stop();
+                expireFlicker.setDuration(Duration.millis(newMs));
+                expireFlicker.play();
+            }
+            if (step[0] >= maxSteps) {
+                if (holder[0] != null) holder[0].expire();
+            }
+        }, Duration.seconds(0.25));
+        flickerSpeedUpTimer = holder[0];
+    }
+
+    private void stopExpireWarning() {
+        if (flickerStartTimer != null) {
+            flickerStartTimer.expire();
+            flickerStartTimer = null;
+        }
+        if (flickerSpeedUpTimer != null) {
+            flickerSpeedUpTimer.expire();
+            flickerSpeedUpTimer = null;
+        }
+        if (expireFlicker != null) {
+            expireFlicker.stop();
+            expireFlicker = null;
+        }
+        if (safetyWallView != null) {
+            safetyWallView.setOpacity(1.0);
+        }
     }
 
     private void pushBallsAboveSafetyWall() {

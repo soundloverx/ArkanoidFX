@@ -6,7 +6,7 @@
 
     <groupId>org.overb</groupId>
     <artifactId>ArkanoidFX</artifactId>
-    <version>0.6</version>
+    <version>0.7</version>
     <name>ArkanoidFX</name>
 
     <properties>

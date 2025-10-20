@@ -68,7 +68,7 @@ public class ArkanoidApp extends GameApplication {
     protected void initSettings(GameSettings settings) {
         Resolution defaultResolution = Resolution.R1920x1080;
         settings.setTitle("Arkanoid FX");
-        settings.setVersion("0.6");
+        settings.setVersion("0.7");
         settings.setWidth(defaultResolution.getWidth());
         settings.setHeight(defaultResolution.getHeight());
         settings.setFullScreenAllowed(true);
