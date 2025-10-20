@@ -3,6 +3,7 @@ package org.overb.arkanoidfx.game.ui;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.HPos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
@@ -50,8 +51,10 @@ public class OptionsMenuUI extends FullscreenMenuUI {
         int row = 0;
         Text title = new Text("Options");
         title.setFill(Color.WHITE);
-        title.setFont(Font.font("Verdana", FontWeight.BOLD, 50));
-        title.setEffect(new DropShadow(24, Color.LIGHTGRAY));
+        title.setFont(Font.font("Verdana", FontWeight.BOLD, 56));
+        title.setEffect(new DropShadow(35, Color.DARKVIOLET));
+        GridPane.setHalignment(title, HPos.CENTER);
+        GridPane.setMargin(title, new Insets(0, 0, 36, 0));
         grid.add(title, 0, row++, 2, 1);
 
         // Resolution
